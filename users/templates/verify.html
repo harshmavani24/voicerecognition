@@ -1,0 +1,198 @@
+{% load static custom_filters %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify OTP</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+    h2 {
+      text-align: center;
+      color: #7b3f00;
+      font-size: 60px;
+      font-weight: 700;
+      margin-top: -50px;
+      margin-bottom: 30px;
+    }
+    p {
+      text-align: center;
+      color: darkbrown;
+      font-size: 20px;
+      margin-bottom: 10px;
+      word-wrap: break-word;
+    }
+    .box3 {
+      height: 100vh;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-image: url("{% static 'users/bg.jpg' %}");
+      background-repeat: no-repeat;
+      background-size: cover;
+    }
+    .verifyotp {
+      height: 400px;
+      width: 600px;
+      background-color: rgba(255, 255, 255, 0.3);
+      border-radius: 30px;
+      display: flex;
+      justify-content: center;
+      flex-direction: column;
+      font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande", "Lucida Sans", Arial, sans-serif;
+      padding-top: 50px;
+    }
+    button {
+      background-color:#7b3f00;
+      color: white;
+      width: 300px;
+      height: 70px;
+      border-radius: 40px;
+      border: none;
+      margin-left: auto;
+      margin-right: auto;
+      margin-top: 50px;
+      font-size: 40px;
+      transition: all 0.4s ease-in-out;
+      cursor: pointer;
+    }
+    button:active {
+      transform: scale(0.6);
+    }
+    .verifyotp input {
+      background-color: rgba(255, 255, 255, 0.7);
+      border: none;
+      outline: none;
+      border-radius: 40px;
+      padding: 10px;
+      margin-top: 50px;
+      width: 400px;
+      height: 30px;
+      font-size: 22px;
+      margin-left: auto;
+      margin-right: auto;
+      color: rgb(62, 62, 62);
+      font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande", "Lucida Sans", Arial, sans-serif;
+      transition: all 0.3s ease-in-out;
+    }
+    .verifyotp input:focus {
+      background-color: rgba(255, 255, 255, 0.9);
+    }
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    #error-message {
+  text-align: center;
+  color: rgb(208, 0, 0);
+  font-size: 18px;
+  margin-top: 10px;
+  opacity: 0;
+  animation: slide-down 1.5s ease-in-out forwards;
+}
+
+@keyframes slide-down {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+
+    #urlemail{
+        font-family: monospace;
+        text-shadow: 0 0 5px black;
+    }
+
+  </style>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+    $(document).ready(function() {
+      // Extract email from URL
+      var urlParams = new URLSearchParams(window.location.search);
+      var email = urlParams.get('email');
+      $('#urlemail').text(email);
+  
+      // Check if the browser supports the 'popstate' event
+      if (window.history && window.history.pushState) {
+        // Bind the 'popstate' event to the window
+        $(window).on('popstate', function() {
+          var pendingUser = JSON.parse(localStorage.getItem('pendingUser'));
+          if (pendingUser) {
+            localStorage.removeItem('pendingUser');
+  
+            // Send an AJAX request to delete the pending user from the server
+            $.ajax({
+              type: 'DELETE',
+              url: '/api/deleteUser',
+              data: JSON.stringify({ id: pendingUser.id }),
+              contentType: 'application/json',
+              success: function(response) {
+                console.log('Pending user deleted');
+              },
+              error: function(error) {
+                console.error('An error occurred while deleting the pending user:', error);
+              }
+            });
+          }
+        });
+      }
+  
+      $('#verify-btn').on('click', function(event) {
+        event.preventDefault(); // Prevent form submission
+  
+        var otp = $('#otp-input').val();
+  
+        $.ajax({
+          url: '/api/verify', // Replace with your verification API endpoint URL
+          method: 'POST',
+          data: {
+            email: email,
+            otp: otp
+          },
+          success: function(response) {
+            console.log(response);
+            if (response.status === 200) {
+              console.log('Account verified successfully');
+              window.location.href = '/login'; 
+            } else {
+              $('#error-message').text(response.data);
+            }
+          },
+          error: function(xhr, status, error) {
+            if (xhr.status === 400 && xhr.responseJSON.message === 'Account verification expired. Please sign up again.') {
+                $('#error-message').text(xhr.responseJSON.message);
+            } else {
+                console.error(xhr.responseText);
+                $('#error-message').text('Something went wrong. Please try again.');
+            }
+        }
+        });
+      });
+    });
+  </script>
+  
+</head>
+</head>
+<body>
+  <div class="box3">
+    <div class="verifyotp">
+      <h2>Enter OTP</h2>
+      <p style="text-shadow: 0 0 2px black;">Enter the OTP sent to your registered email address:</p>
+      <p id="urlemail"><strong>{{ email }}</strong></p>
+      <input type="number" required placeholder="------" maxlength="6" id="otp-input">
+      <button id="verify-btn">Verify OTP</button>
+      <div id="error-message"></div> <!-- Error message div -->
+    </div>
+  </div>
+</body>
+</html>

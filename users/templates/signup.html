@@ -1,0 +1,651 @@
+{% comment %} {% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Signup</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+      }
+      .container {
+        height: 100vh;
+        width: 100%;
+        background-image: url("{% static 'users/blur-bg.webp' %}");
+        background-size: cover;
+        background-position: center;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .box {
+        height: 700px;
+        width: 600px;
+        background-color: rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(8px);
+        border-radius: 30px;
+        display: flex;
+        justify-content: center;
+        flex-direction: column;
+        font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande",
+          "Lucida Sans", Arial, sans-serif;
+        padding-top: 50px;
+      }
+      .box1 {
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+        margin-top: -40px;
+      }
+      h2 {
+        padding-left: 90px;
+        color: darkblue;
+        font-size: 60px;
+        font-weight: 700;
+        margin-top: -30px;
+        margin-bottom: 40px;
+      }
+      .box1 input {
+        background-color: rgba(255, 255, 255, 0.7);
+        border: none;
+        outline: none;
+        border-radius: 40px;
+        padding: 10px;
+        margin-top: 30px;
+        width: 400px;
+        height: 30px;
+        font-size: 22px;
+        color: rgb(62, 62, 62);
+        font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande",
+          "Lucida Sans", Arial, sans-serif;
+        transition: all 0.3s ease-in-out;
+      }
+      .box1 input:focus {
+        background-color: rgba(255, 255, 255, 0.9);
+      }
+      input::-webkit-outer-spin-button,
+      input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+      .box2 {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-direction: row;
+        margin-top: 40px;
+        margin-left: 90px;
+        margin-right: auto;
+      }
+      .box2 label {
+        margin: 0;
+        font-size: 20px;
+        color: white;
+      }
+      button {
+        background-color: rgb(65, 40, 128);
+        color: white;
+        width: 300px;
+        height: 70px;
+        border-radius: 40px;
+        border: none;
+        margin-left: auto;
+        margin-right: auto;
+        margin-top: 30px;
+        font-size: 40px;
+        transition: all 0.4s ease-in-out;
+        cursor: pointer;
+      }
+      button:active {
+        transform: scale(0.6);
+      }
+      p {
+        text-align: center;
+        margin-top: 30px;
+        margin-bottom: 20px;
+        font-size: 20px;
+        color: white;
+      }
+      #login {
+        color: blue;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      #login:hover {
+        color: rgb(65, 40, 128);
+      }
+      #error-message {
+        text-align: center;
+        color: red;
+        font-size: 18px;
+        margin-top: 10px;
+      }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+      $(document).ready(function() {
+        $('#signup').click(function(event) {
+          event.preventDefault(); // Prevent the default form submission behavior
+    
+          // Get the input values
+          var name = $('#name').val();
+          var phoneNumber = $('#phonenumber').val();
+          var email = $('#email').val();
+          var password = $('#pass').val();
+          var confirmPassword = $('#confirmpass').val();
+          
+          // Validate the phone number to contain 10 digits
+          if (phoneNumber.length !== 10) {
+            $('#error-message').text('Phone number should be 10 digits.');
+            return;
+          }
+          if (password !== confirmPassword) {
+            $('#error-message').text('Passwords do not match.');
+            return;
+          }
+          if (password.length < 8) {
+            $('#error-message').text('Password should be at least 8 characters.');
+            return;
+          }
+          if (name.length < 3) {
+            $('#error-message').text('Name should be at least 3 characters.');
+            return;
+          }
+          if (email.length < 3) {
+            $('#error-message').text('Email should be at least 3 characters.');
+            return;
+          }
+          // password should contain at one uppercase, one lowercase, one number and one special character
+          var regex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/;
+          if (!regex.test(password)) {
+            $('#error-message').text(
+              'Password should contain at least one uppercase, one lowercase, one number and one special character.'
+            );
+            return;
+          }
+          // i want to Validate email to contain @ and . but dont allowed + in email
+          if (email.indexOf('@') <= 0) {
+            $('#error-message').text('Invalid email.');
+            return;
+          }
+          if (
+            email.charAt(email.length - 4) !== '.' &&
+            email.charAt(email.length - 3) !== '.'
+          ) {
+            $('#error-message').text('Invalid email.');
+            return;
+          }
+          if (email.indexOf('+') > 0) {
+            $('#error-message').text('Invalid email.');
+            return;
+          }
+          // Create the data object
+          var data = {
+            name: name,
+            phonenumber: phoneNumber,
+            email: email,
+            password: password,
+            confirm_password: confirmPassword
+          };
+    
+          // Send the AJAX request
+          $.ajax({
+            type: 'POST',
+            url: '/api/register',
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            success: function(response) {
+              // Handle the successful response
+              console.log(response);
+              if (response.success) {
+                // Redirect to /verify with query parameters if the registration is successful
+                console.log('Redirecting to /verify');
+                var redirectUrl = '/verify/?email=' + encodeURIComponent(email);
+                window.location.href = redirectUrl;
+              }else {
+                // Display the error message
+                $('#error-message').text(response.message);
+              }
+            },
+            error: function(error) {
+              // Handle the error response
+              if (error.responseJSON.message === 'User already exists') {
+                $('#error-message').text('User already exists');
+              } else {
+                $('#error-message').text('An error occurred during the signup process.');
+              }
+              if (error.responseJSON.message === 'Invalid email') {
+                $('#error-message').text('Invalid email');
+              }
+              if (error.responseJSON.message === 'Invalid password') {
+                $('#error-message').text('Invalid password');
+              }
+              if (error.responseJSON.message === 'Invalid name') {
+                $('#error-message').text('Invalid name');
+              }
+              // if status code is 400 then display error message
+              if (error.status === 400) {
+                $('#error-message').text('Email or phone already exists');
+              }
+              if (error.responseJSON.message === 'Phone number already exists') {
+                $('#error-message').text('Phone number already exists');
+              }
+              if (error.responseJSON.message === 'Invalid confirm password') {
+                $('#error-message').text('Invalid confirm password');
+              }
+              if (error.responseJSON.message === 'Email already exists') {
+                $('#error-message').text('Email already exists');
+              }
+              console.log(error);
+            }
+          });
+        });
+      });
+    </script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="box">
+        <h2>Sign Up</h2>
+        <div class="box1">
+          <input
+            type="text"
+            required
+            placeholder="Name"
+            id="name"
+          />
+
+          <input
+            type="number"
+            required
+            placeholder="Mobile"
+            maxlength="10"
+            id="phonenumber"
+          />
+
+          <input
+            type="email"
+            required
+            placeholder="Email"
+            id="email"
+          />
+
+          <input
+            type="password"
+            id="pass"
+            required
+            placeholder="Password"
+
+          />
+          <input
+            type="password"
+            id="confirmpass"
+            required
+            placeholder="Confirm Password"
+          />
+          <div id="error-message"></div>
+
+        </div>
+        <div class="box2">
+          <input
+            type="checkbox"
+            name="remember"
+            id="remember"
+            style="height: 20px; width: 20px"
+          />
+          <label for="remember">Remember Password</label>
+        </div>
+        <button type="submit" name="signup" id="signup" >
+          Sign Up
+        </button>
+        <p>Already registered ? <a id="login" href="/login">Log in</a></p>
+      </div>
+    </div>
+  </body>
+</html> {% endcomment %}
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Signup</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+      }
+      .container {
+        height: 100vh;
+        width: 100%;
+        background-image: url("{% static 'users/bg.jpg' %}");
+        background-size: cover;
+        background-position: center;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .box {
+        height: 700px;
+        width: 600px;
+        background-color: rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(8px);
+        border-radius: 30px;
+        display: flex;
+        justify-content: center;
+        flex-direction: column;
+        font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande",
+          "Lucida Sans", Arial, sans-serif;
+        padding-top: 50px;
+      }
+      .box1 {
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+        margin-top: -40px;
+      }
+      h2 {
+        padding-left: 90px;
+        color: #7b3f00;
+        font-size: 60px;
+        font-weight: 700;
+        margin-top: -30px;
+        margin-bottom: 40px;
+      }
+      .box1 input {
+        background-color: rgba(255, 255, 255, 0.7);
+        border: none;
+        outline: none;
+        border-radius: 40px;
+        padding: 10px;
+        margin-top: 30px;
+        width: 400px;
+        height: 30px;
+        font-size: 22px;
+        color: #4C4B16;
+        font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande",
+          "Lucida Sans", Arial, sans-serif;
+        transition: all 0.3s ease-in-out;
+      }
+      .box1 input:focus {
+        background-color: rgba(255, 255, 255, 0.9);
+      }
+      input::-webkit-outer-spin-button,
+      input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+      .box2 {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-direction: row;
+        margin-top: 40px;
+        margin-left: 90px;
+        margin-right: auto;
+      }
+      .box2 label {
+        margin: 0;
+        font-size: 20px;
+        color: white;
+      }
+      .loader {
+        display: none;
+        border: 16px solid #f3f3f3;
+        border-top: 16px solid #3498db;
+        border-radius: 50%;
+        width: 80px;
+        height: 80px;
+        animation: spin 2s linear infinite;
+        margin: 20px auto;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      button {
+        background-color: #7b3f00;
+        color: white;
+        width: 300px;
+        height: 70px;
+        border-radius: 40px;
+        border: none;
+        margin-left: auto;
+        margin-right: auto;
+        margin-top: 30px;
+        font-size: 40px;
+        transition: all 0.4s ease-in-out;
+        cursor: pointer;
+      }
+      button:active {
+        transform: scale(0.6);
+      }
+      p {
+        text-align: center;
+        margin-top: 30px;
+        margin-bottom: 20px;
+        font-size: 20px;
+        color: white;
+      }
+      #login {
+        color: blue;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      #login:hover {
+        color: rgb(65, 40, 128);
+      }
+      #error-message {
+        text-align: center;
+        color: red;
+        font-size: 18px;
+        margin-top: 10px;
+      }
+    </style>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+      $(document).ready(function() {
+        $('#signup').click(function(event) {
+          event.preventDefault(); // Prevent the default form submission behavior
+    
+          // Get the input values
+          var name = $('#name').val();
+          var phoneNumber = $('#phonenumber').val();
+          var email = $('#email').val();
+          var password = $('#pass').val();
+          var confirmPassword = $('#confirmpass').val();
+    
+          // Validate the phone number to contain 10 digits
+          if (phoneNumber.length !== 10) {
+            $('#error-message').text('Phone number should be 10 digits.');
+            return;
+          }
+          if (password !== confirmPassword) {
+            $('#error-message').text('Passwords do not match.');
+            return;
+          }
+          if (password.length < 8) {
+            $('#error-message').text('Password should be at least 8 characters.');
+            return;
+          }
+          if (name.length < 3) {
+            $('#error-message').text('Name should be at least 3 characters.');
+            return;
+          }
+          if (email.length < 3) {
+            $('#error-message').text('Email should be at least 3 characters.');
+            return;
+          }
+          // password should contain at one uppercase, one lowercase, one number and one special character
+          var regex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/;
+          if (!regex.test(password)) {
+            $('#error-message').text(
+              'Password should contain at least one uppercase, one lowercase, one number and one special character.'
+            );
+            return;
+          }
+          // i want to Validate email to contain @ and . but dont allowed + in email
+          if (email.indexOf('@') <= 0) {
+            $('#error-message').text('Invalid email.');
+            return;
+          }
+          
+          if (
+            email.charAt(email.length - 4) !== '.' &&
+            email.charAt(email.length - 3) !== '.'
+          ) {
+            $('#error-message').text('Invalid email.');
+            return;
+          }
+          if (email.indexOf('+') > 0) {
+            $('#error-message').text('Invalid email.');
+            return;
+          }
+          // Create the data object
+          var data = {
+            name: name,
+            phonenumber: phoneNumber,
+            email: email,
+            password: password,
+            confirm_password: confirmPassword
+          };
+    
+          // Disable the signup button and show the loader
+          $('#signup').attr('disabled', true);
+          $('.loader').show();
+    
+          // Send the AJAX request
+          $.ajax({
+            type: 'POST',
+            url: '/api/register',
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            success: function(response) {
+              // Handle the successful response
+              console.log(response);
+              if (response.redirect_url) {
+                // Set a cookie to indicate successful signup
+                document.cookie = 'signup_success=true';
+                // Redirect to /verify with query parameters if the registration is successful
+                console.log('Redirecting to /verify');
+                var redirectUrl = '/verify/?email=' + encodeURIComponent(email);
+                window.location.href = redirectUrl;
+              } else {
+                // Display the error message
+                $('#error-message').text(response.message);
+              }
+              // Enable the signup button and hide the loader
+              $('#signup').attr('disabled', false);
+              $('.loader').hide();
+            },
+            error: function(error) {
+              // Handle the error response
+              if (error.responseJSON.message === 'User already exists') {
+                $('#error-message').text('User already exists');
+              } else {
+                $('#error-message').text('An error occurred during the signup process.');
+              }
+              if (error.responseJSON.message === 'Invalid email') {
+                $('#error-message').text('Invalid email');
+              }
+              if (error.responseJSON.message === 'Invalid password') {
+                $('#error-message').text('Invalid password');
+              }
+              if (error.responseJSON.message === 'Invalid name') {
+                $('#error-message').text('Invalid name');
+              }
+              // if status code is 400 then display error message
+              if (error.status === 400) {
+                $('#error-message').text('Email or phone already exists');
+              }
+              if (error.responseJSON.message === 'Phone number already exists') {
+                $('#error-message').text('Phone number already exists');
+              }
+              if (error.responseJSON.message === 'Invalid confirm password') {
+                $('#error-message').text('Invalid confirm password');
+              }
+              if (error.responseJSON.message === 'Email already exists') {
+                $('#error-message').text('Email already exists');
+              }
+              // Enable the signup button and hide the loader
+              $('#signup').attr('disabled', false);
+              $('.loader').hide();
+              console.log(error);
+            }
+          });
+        });
+      });
+    </script>
+    
+    
+    
+  </head>
+  <body>
+    <div class="container">
+      <div class="box">
+        <h2>Sign Up</h2>
+        <div class="box1">
+          <input
+            type="text"
+            required
+            placeholder="Name"
+            id="name"
+          />
+
+          <input
+            type="number"
+            required
+            placeholder="Mobile"
+            maxlength="10"
+            id="phonenumber"
+          />
+
+          <input
+            type="email"
+            required
+            placeholder="Email"
+            id="email"
+          />
+
+          <input
+            type="password"
+            id="pass"
+            required
+            placeholder="Password"
+
+          />
+          <input
+            type="password"
+            id="confirmpass"
+            required
+            placeholder="Confirm Password"
+          />
+          <div id="error-message"></div>
+
+        </div>
+        <div class="box2">
+          <input
+            type="checkbox"
+            name="remember"
+            id="remember"
+            style="height: 20px; width: 20px"
+          />
+          <label for="remember">Remember Password</label>
+        </div>
+        <button type="submit" name="signup" id="signup" >
+          <div class="loader"></div>
+          Sign Up
+        </button>
+        <p>Already registered ? <a id="login" href="/login">Log in</a></p>
+      </div>
+    </div>
+  </body>
+</html>

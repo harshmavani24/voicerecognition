@@ -1,0 +1,170 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reset Password</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+      }
+      h2{
+    text-align: center;
+    color: #7b3f00;
+    font-size: 60px;
+    font-weight: 700;
+    margin-top: -40px;
+    margin-bottom: px;
+}
+      .box3 {
+        height: 100vh;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-image: url("{% static 'users/bg.jpg' %}");
+        background-repeat: no-repeat;
+        background-size: cover;
+      }
+      .reset {
+        height: 450px;
+        width: 600px;
+        background-color: rgba(255, 255, 255, 0.3);
+        border-radius: 30px;
+        display: flex;
+        justify-content: center;
+        flex-direction: column;
+        font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande",
+          "Lucida Sans", Arial, sans-serif;
+        padding-top: 50px;
+      }
+      button {
+        background-color: #7b3f00;
+        color: white;
+        width: 300px;
+        height: 70px;
+        border-radius: 40px;
+        border: none;
+        margin-left: auto;
+        margin-right: auto;
+        margin-top: 40px;
+        font-size: 35px;
+        transition: all 0.4s ease-in-out;
+        cursor: pointer;
+      }
+      button:active {
+        transform: scale(0.6);
+      }
+      #error-message {
+        text-align: center;
+        color: rgb(208, 0, 0);
+        font-size: 18px;
+        margin-top: 10px;
+        opacity: 0;
+        animation: slide-down 1.5s ease-in-out forwards;
+      }
+      #success-message {
+        color: green;
+        font-weight: bold;
+        text-align: center;
+        font-size: 18px;
+        margin-top: 10px;
+        opacity: 0;
+        animation: slide-down 1.5s ease-in-out forwards;
+      }
+      .reset input {
+        background-color: transparent;
+        border: white 2px solid;
+        outline: none;
+        border-radius: 10px;
+        padding: 15px;
+        margin-top: 50px;
+        width: 400px;
+        height: 30px;
+        font-size: 22px;
+        margin-left: auto;
+        margin-right: auto;
+        color: darkbrown;
+        font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande",
+          "Lucida Sans", Arial, sans-serif;
+        transition: all 0.3s ease-in-out;
+      }
+      .reset input:focus {
+        background-color: rgba(255, 255, 255, 0.2);
+      }
+      input[type="password"]{
+    background-position: 97%;
+    background-repeat: no-repeat;
+    background-size: 8%;
+}
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+      $(document).ready(function() {
+        var urlParams = new URLSearchParams(window.location.search);
+        var token = urlParams.get('token');
+        var uidb = urlParams.get('uidb64');
+        $('#reset-btn').on('click', function(e) {
+          e.preventDefault();
+      
+          var newPassword = $('#new-password').val();
+          var confirmPassword = $('#confirm-password').val();
+      
+          if (newPassword === '' || confirmPassword === '') {
+            $('#error-message').text('Please fill in all fields');
+            return;
+          }
+      
+          if (newPassword !== confirmPassword) {
+            $('#error-message').text('Passwords do not match');
+            return;
+          }
+      
+          // Send the token and password to the API endpoint
+          $.ajax({
+            type: 'POST',
+            url: '/api/reset?uidb64=' + uidb + '&token=' + token,
+            data: {
+              token: token,
+              new_password: newPassword
+            },
+            success: function(response) {
+              // Handle the API response
+              if (response.success) {
+                $('#success-message').text(response.message).css('opacity', 1);
+                window.location.href = '/login';
+              } else {
+                $('#error-message').text(response.message).css('opacity', 1);
+              }
+            },
+            error: function(xhr, status, error) {
+              if(xhr.status === 403){
+                $('#error-message').text('Invalid reset token').css('opacity', 1);
+              }
+             else {
+              console.error(xhr.responseText);
+              $('#error-message').text('Something went wrong. Please try again.').css('opacity', 1);
+            }
+            
+            }
+          });
+        });
+      });
+      
+    </script>
+  </head>
+  <body>
+    <div class="box3">
+      <div class="reset">
+        <h2>Reset Password</h2>
+        <input type="password" id="new-password" required placeholder="New Password">
+        <input type="password" id="confirm-password" required placeholder="Confirm Password">
+        <div id="error-message"></div>
+        <div id="success-message"></div>
+        <button id="reset-btn">Reset</button>
+      </div>
+    </div>
+  </body>
+</html>

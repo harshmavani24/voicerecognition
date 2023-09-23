@@ -1,0 +1,590 @@
+{% comment %} <!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Bootstrap CSS -->
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+    />
+    <title>Citizen Service Portal</title>
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      .card-columns {
+        column-count: 3;
+      }
+      @media (max-width: 992px) {
+        .card-columns {
+          column-count: 2;
+        }
+      }
+
+      @media (max-width: 576px) {
+        .card-columns {
+          column-count: 1;
+        }
+      }
+
+      .navbar-brand img {
+        height: 60px;
+        margin-right: 10px;
+      }
+
+      .navbar-nav.ml-auto {
+        margin-left: auto;
+      }
+
+      .card {
+        border: 1px solid #ccc;
+        border-radius: 8px;
+      }
+
+      .card-img-top {
+        object-fit: cover;
+        height: 200px;
+        border-top-left-radius: 8px;
+        border-top-right-radius: 8px;
+      }
+
+      .card-body {
+        padding: 1.25rem;
+      }
+
+      .card-title {
+        margin-bottom: 0.75rem;
+        font-weight: bold;
+      }
+
+      .card-text {
+        margin-bottom: 1rem;
+      }
+
+      .card-link {
+        color: #007bff;
+        text-decoration: none;
+      }
+
+      .card-link:hover {
+        text-decoration: underline;
+      }
+
+      .card-expandable-content {
+        display: none;
+      }
+
+      .card-expanded .card-expandable-content {
+        display: block;
+      }
+      .footer {
+  padding: 30px 0;
+}
+
+.footer-bottom {
+  background-color: #333;
+  padding: 15px 0;
+}
+
+.footer-bottom p {
+  margin-bottom: 0;
+}
+
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+      <a class="navbar-brand" href="#">
+        <img src="http://wibit.in/wp-content/uploads/2021/12/wibit-1.png" alt="Logo" />
+        Citizen Service Portal
+      </a>
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-toggle="collapse"
+        data-target="#navbarNav"
+        aria-controls="navbarNav"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ml-auto">
+          <li class="nav-item active">
+            <a class="nav-link" href="#"
+              >Home <span class="sr-only">(current)</span></a
+            >
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">About</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">Services</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">Contact</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+    <div class="container mt-4">
+      <div class="row">
+        <div class="col-md-4 mb-4">
+          <div class="card">
+            <img
+              src="sample.jpeg"
+              class="card-img-top card-img-top-left"
+              alt="Image"
+            />
+            <div class="card-body">
+              <h5 class="card-title"> Card Heading 1</h5>
+              <p class="card-text">
+                Card Description 1. This is a sample description for the card.
+              </p>
+              <a href="#" class="card-link card-expand">View More</a>
+            </div>
+            <div class="card-expandable-content">
+              <div class="card-body">
+                <p>
+                  This is the expanded content of the card. It can contain more
+                  details or additional information.
+                </p>
+              </div>
+              <div class="card-footer">
+                <button class="btn btn-secondary card-collapse">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4 mb-4">
+          <div class="card">
+            <img
+              src="sample2.jpeg"
+              class="card-img-top card-img-top-left"
+              alt="Image"
+            />
+            <div class="card-body">
+              <h5 class="card-title">Card Heading 2</h5>
+              <p class="card-text">
+                Card Description 2. This is a sample description for the card.
+              </p>
+              <a href="#" class="card-link card-expand">View More</a>
+            </div>
+            <div class="card-expandable-content">
+              <div class="card-body">
+                <p>
+                  This is the expanded content of the card. It can contain more
+                  details or additional information.
+                </p>
+              </div>
+              <div class="card-footer">
+                <button class="btn btn-secondary card-collapse">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4 mb-4">
+          <div class="card">
+            <img
+              src="blur-bg.webp"
+              class="card-img-top card-img-top-left"
+              alt="Image"
+            />
+            <div class="card-body">
+              <h5 class="card-title">Card Heading 3</h5>
+              <p class="card-text">
+                Card Description 3. This is a sample description for the card.
+              </p>
+              <a href="#" class="card-link card-expand">View More</a>
+            </div>
+            <div class="card-expandable-content">
+              <div class="card-body">
+                <p>
+                  This is the expanded content of the card. It can contain more
+                  details or additional information.
+                </p>
+              </div>
+              <div class="card-footer">
+                <button class="btn btn-secondary card-collapse">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4 mb-4">
+          <div class="card">
+            <img
+              src="sample2.png"
+              class="card-img-top card-img-top-left"
+              alt="Image"
+            />
+            <div class="card-body">
+              <h5 class="card-title">Card Heading 4</h5>
+              <p class="card-text">
+                Card Description 4. This is a sample description for the card.
+              </p>
+              <a href="#" class="card-link card-expand">View More</a>
+            </div>
+            <div class="card-expandable-content">
+              <div class="card-body">
+                <p>
+                  This is the expanded content of the card. It can contain more
+                  details or additional information.
+                </p>
+              </div>
+              <div class="card-footer">
+                <button class="btn btn-secondary card-collapse">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4 mb-4">
+          <div class="card">
+            <img
+              src="sample.jpeg"
+              class="card-img-top card-img-top-left"
+              alt="Image"
+            />
+            <div class="card-body">
+              <h5 class="card-title">Card Heading 5</h5>
+              <p class="card-text">
+                Card Description 5. This is a sample description for the card.
+              </p>
+              <a href="#" class="card-link card-expand">View More</a>
+            </div>
+            <div class="card-expandable-content">
+              <div class="card-body">
+                <p>
+                  This is the expanded content of the card. It can contain more
+                  details or additional information.
+                </p>
+              </div>
+              <div class="card-footer">
+                <button class="btn btn-secondary card-collapse">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4 mb-4">
+          <div class="card">
+            <img
+              src="sample2.jpeg"
+              class="card-img-top card-img-top-left"
+              alt="Image"
+            />
+            <div class="card-body">
+              <h5 class="card-title">Card Heading 6</h5>
+              <p class="card-text">
+                Card Description 6. This is a sample description for the card.
+              </p>
+              <a href="#" class="card-link card-expand">View More</a>
+            </div>
+            <div class="card-expandable-content">
+              <div class="card-body">
+                <p>
+                  This is the expanded content of the card. It can contain more
+                  details or additional information.
+                </p>
+              </div>
+              <div class="card-footer">
+                <button class="btn btn-secondary card-collapse">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+        </div>
+        <footer class="footer bg-dark text-light">
+          <div class="container-fluid">
+            <div class="row">
+              <div class="col-md-6">
+                <h5>About Us</h5>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque condimentum lacinia nulla, a scelerisque felis blandit id.</p>
+              </div>
+              <div class="col-md-3">
+                <h5>Quick Links</h5>
+                <ul class="list-unstyled">
+                  <li><a href="#">Home</a></li>
+                  <li><a href="#">About</a></li>
+                  <li><a href="#">Services</a></li>
+                  <li><a href="#">Contact</a></li>
+                </ul>
+              </div>
+              <div class="col-md-3">
+                <h5>Contact Us</h5>
+                <ul class="list-unstyled">
+                  <li>Address: 123 Street, City, Country</li>
+                  <li>Phone: +1 123 456 7890</li>
+                  <li>Email: info@example.com</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="footer-bottom">
+            <div class="container-fluid">
+              <div class="row">
+                <div class="col-md-12 text-center">
+                  <hr>
+                  <p>&copy; 2023 Your Government Portal. All rights reserved.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </footer>
+    
+    
+        <!-- Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+      // Close the navbar when an option is selected
+      $(".navbar-nav>li>a").on("click", function () {
+        $(".navbar-collapse").collapse("hide");
+      });
+    
+      $(".card-expand").click(function (event) {
+        event.preventDefault(); // Prevent default link behavior
+        var card = $(this).closest(".card");
+        card.toggleClass("card-expanded");
+      });
+    
+      $(".card-collapse").click(function () {
+        var card = $(this).closest(".card");
+        card.removeClass("card-expanded");
+      });
+    </script>
+    
+  </body>
+</html> {% endcomment %}
+
+
+
+{% comment %} <!DOCTYPE html>
+<html>
+<head>
+  <title>Garbage Collection Form</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD9Uv0K8IISbb8pJcPRIe0WYnaTRezb6CM&libraries=places" async defer></script>
+</head>
+<body>
+  <h1>Garbage Collection Form</h1>
+  <form id="query-form">
+    <label for="name">Name:</label>
+    <input type="text" id="name" name="name" required><br><br>
+
+    <label for="phone">Phone:</label>
+    <input type="text" id="phone" name="phone" required><br><br>
+
+    <label for="email">Email:</label>
+    <input type="email" id="email" name="email" required><br><br>
+
+    <label for="message">Message:</label>
+    <textarea id="message" name="message" required></textarea><br><br>
+
+    <label for="location">Location:</label>
+    <input type="text" id="search-location" name="location" placeholder="Search for location" required><br><br>
+
+    <div id="search-results"></div><br>
+
+    <input type="submit" value="Submit">
+  </form>
+
+  <script>
+    function initAutocomplete() {
+      const input = document.getElementById('search-location');
+      const searchBox = new google.maps.places.SearchBox(input);
+
+      searchBox.addListener('places_changed', function() {
+        const places = searchBox.getPlaces();
+
+        if (places.length === 0) {
+          return;
+        }
+
+        const place = places[0];
+        const mapLink = `https://maps.google.com/?q=${place.geometry.location.lat()},${place.geometry.location.lng()}`;
+
+        document.getElementById('location').value = mapLink;
+      });
+    }
+
+    function getLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+          const latitude = position.coords.latitude.toFixed(6);
+          const longitude = position.coords.longitude.toFixed(6);
+
+          const mapLink = `https://maps.google.com/?q=${latitude},${longitude}`;
+
+          document.getElementById('location').value = mapLink;
+        });
+      } else {
+        alert('Geolocation is not supported by this browser.');
+      }
+    }
+  </script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD9Uv0K8IISbb8pJcPRIe0WYnaTRezb6CM&libraries=places&callback=initAutocomplete" async defer></script>
+</body>
+</html> {% endcomment %}
+
+
+{% comment %} <!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Autofill checkout demo (Javascript)</title>
+<!-- Default styling. Feel free to remove! -->
+<link href="https://api.mapbox.com/mapbox-assembly/v1.3.0/assembly.min.css" rel="stylesheet">
+<script id="search-js" defer="" src="https://api.mapbox.com/search-js/v1.0.0-beta.16/web.js"></script>
+</head>
+<body>
+
+<style>
+  .hide {
+    display: none;
+  }
+</style>
+
+<form class="flex flex--column">
+  <div class="grid grid--gut24 mb60">
+    <div class="col col--auto-mm w-full">
+
+      <!-- Input form -->
+      <label class="txt-s txt-bold color-gray mb3">Address</label>
+      <input class="input mb12" placeholder="Start typing your address, e.g. 123 Main..." autocomplete="address-line1" id="mapbox-autofill">
+      <div id="manual-entry" class="w180 mt6 link txt-ms border-b color-gray color-black-on-hover">
+        Enter an address manually
+      </div>
+      <div class="secondary-inputs hide">
+        <label class="txt-s txt-bold color-gray mb3">Address Line 2</label>
+        <input class="input mb12" placeholder="Apartment, suite, unit, building, floor, etc." autocomplete="address-line2">
+        <label class="txt-s txt-bold color-gray mb3">City</label>
+        <input class="input mb12" placeholder="City" autocomplete="address-level2">
+        <label class="txt-s txt-bold color-gray mb3">State / Region</label>
+        <input class="input mb12" placeholder="State / Region" autocomplete="address-level1">
+        <label class="txt-s txt-bold color-gray mb3">ZIP / Postcode</label>
+        <input class="input" placeholder="ZIP / Postcode" autocomplete="postal-code">
+      </div>
+    </div>
+    <div class="col col--auto-mm">
+      <!-- Visual confirmation map -->
+      <div id="minimap-container" class="none h240 w360 relative mt18"></div>
+    </div>
+  </div>
+
+  <!-- Form buttons -->
+  <div class="mb30 submit-btns hide">
+    <button type="submit" class="btn round" id="btn-confirm">
+      Confirm
+    </button>
+    <button type="button" class="btn round btn--gray-light" id="btn-reset">
+      Reset
+    </button>
+  </div>
+</form>
+
+<div id="validation-msg" class="mt24 txt-m txt-bold none">Test</div>
+
+<script>
+const ACCESS_TOKEN = 'pk.eyJ1IjoicHJpbmNlNTQiLCJhIjoiY2xqNjRyanRyMGhzdjNobnhmNDQwdzZ3ciJ9.HcU4c5KeCa8GOCCn0PcUjQ';
+
+  let autofillCollection;
+  let minimap;
+
+  // Form operation functions
+  function showMap() {
+    const el = document.getElementById("minimap-container");
+    el.classList.remove("none");
+  }
+  function hideMap() {
+    const el = document.getElementById("minimap-container");
+    el.classList.add("none");
+  }
+  function expandForm() {
+    document.getElementById("manual-entry").classList.add("hide");
+    document.querySelector(".secondary-inputs").classList.remove("hide");
+    document.querySelector(".submit-btns").classList.remove("hide");
+  }
+  function collapseForm() {
+    document.getElementById("manual-entry").classList.remove("hide");
+    document.querySelector(".secondary-inputs").classList.add("hide");
+    document.querySelector(".submit-btns").classList.add("hide");
+  }
+  function setValidationText(color, msg, clear = false) {
+    const validationTextElement = document.getElementById("validation-msg");
+    if (clear) validationTextElement.classList.add("none");
+    validationTextElement.classList.remove("color-green", "color-red");
+    validationTextElement.classList.add(`color-${color}`);
+    validationTextElement.innerText = msg;
+    validationTextElement.classList.remove("none");
+  }
+  function submitForm() {
+    setValidationText("green", "Order successfully submitted.");
+    setTimeout(() => {
+      resetForm();
+    }, 2500);
+  }
+  function resetForm() {
+    const inputs = document.querySelectorAll("input");
+    inputs.forEach(input => input.value = "");
+    collapseForm();
+    setValidationText("green", "", true)
+    autofillCollection.update();
+    minimap.feature = null;
+  }
+
+  // Bind functions to HTML buttons
+  document
+    .getElementById("manual-entry")
+    .addEventListener("click", expandForm);
+  document.getElementById("btn-reset").addEventListener("click", resetForm);
+
+  // Autofill initialization
+  document.getElementById("search-js").onload = () => {
+    mapboxsearch.config.accessToken = ACCESS_TOKEN;
+      
+    autofillCollection = mapboxsearch.autofill({});
+
+    minimap = new MapboxAddressMinimap();
+    minimap.canAdjustMarker = true;
+    minimap.satelliteToggle = true;
+    minimap.onSaveMarkerLocation = (lnglat) => {
+      console.log(`Marker moved to ${lnglat}`);
+    };
+    const minimapContainer = document.getElementById("minimap-container");
+    minimapContainer.appendChild(minimap);
+
+    autofillCollection.addEventListener(
+      "retrieve",
+      async (e) => {
+        expandForm();
+        if (minimap) {
+          minimap.feature = e.detail.features[0];
+          showMap();
+        }
+      }
+    );
+
+    // Add confirmation prompt to shipping address
+    const form = document.querySelector("form");
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const result = await mapboxsearch.confirmAddress(form, {
+        minimap: true,
+        skipConfirmModal: (feature) =>
+          ['exact', 'high'].includes(
+            feature.properties.match_code.confidence
+          )
+      });
+      if (result.type === 'nochange') submitForm();
+    });
+  }
+</script>
+
+</body>
+</html> {% endcomment %}
+
+
+
+{% comment %} AIzaSyD9Uv0K8IISbb8pJcPRIe0WYnaTRezb6CM {% endcomment %}
+{% comment %} 3d59247167f84e6793cd13cec3763787 {% endcomment %}

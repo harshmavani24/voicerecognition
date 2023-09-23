@@ -1,0 +1,12 @@
+{% extends 'admin/base.html' %}
+
+{% block content %}
+    <h1>Admin Images</h1>
+    <ul>
+        {% for image in images %}
+            <li>{{ image }}</li>  <!-- Display image details as needed -->
+        {% empty %}
+            <li>No images available.</li>
+        {% endfor %}
+    </ul>
+{% endblock %}

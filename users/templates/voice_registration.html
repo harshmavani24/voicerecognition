@@ -1,0 +1,845 @@
+{% comment %} <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Registration</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <button id="startRecording">Register Voice</button>
+    <div id="userDetails">
+        <p id="uname">Name: </p>
+        <p id="phone">Mobile: </p>
+    </div>
+    <script>
+        $(document).ready(function () {
+            $.ajax({
+                url: "/api/user",
+                method: "GET",
+                xhrFields: {
+                    withCredentials: true
+                },
+                success: function (data) {
+                    // Assuming the API response contains user details: id, name, phone
+                    $("#uname").text("Name: " + data.name);
+                    $("#phone").text("Mobile: " + data.phonenumber);
+
+                    // Capture the user's mobile number
+                    const userMobile = data.phonenumber.replace(/\D/g, ''); // Remove non-numeric characters
+
+                    const startRecordingButton = document.getElementById('startRecording');
+                    startRecordingButton.addEventListener('click', async () => {
+                        try {
+                            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                            const mediaRecorder = new MediaRecorder(stream);
+                            const audioChunks = [];
+
+                            mediaRecorder.ondataavailable = event => {
+                                if (event.data.size > 0) {
+                                    audioChunks.push(event.data);
+                                }
+                            };
+
+                            mediaRecorder.onstop = () => {
+                                const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                                const formData = new FormData();
+
+                                // Append the user's mobile number as part of the file name.
+                                const fileName = `${userMobile}_voice_sample.wav`;
+                                formData.append('audio', audioBlob, fileName);
+
+                                // Send the audio data to the server via a POST request
+                                fetch('/upload_voice/', {
+                                    method: 'POST',
+                                    body: formData
+                                })
+                                .then(response => {
+                                    if (response.ok) {
+                                        // Voice recording uploaded successfully
+                                        console.log('Voice recording uploaded successfully.');
+                                    } else {
+                                        // Handle the server's response here if there's an error
+                                        console.error('Error uploading voice recording.');
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Error sending audio data:', error);
+                                });
+                            };
+
+                            mediaRecorder.start();
+                            setTimeout(() => {
+                                mediaRecorder.stop();
+                            }, 10000); // Stop recording after 10 seconds
+                        } catch (error) {
+                            console.error('Error accessing microphone:', error);
+                        }
+                    });
+                },
+                error: function (xhr, status, error) {
+                    console.log("Error:", error);
+                }
+            });
+        });
+    </script>
+</body>
+</html>  {% endcomment %}
+
+
+{% comment %} <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Registration</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/annyang/2.6.1/annyang.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+        }
+
+        button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #alphabet {
+            display: none;
+        }
+
+        #letter {
+            font-size: 24px;
+            margin-top: 10px;
+        }
+
+        #feedback {
+            font-size: 18px;
+            color: green;
+            margin-top: 5px;
+        }
+
+        #status {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Voice Registration</h1>
+        <button id="startRecording">Register Voice</button>
+        <div id="userDetails">
+            <p id="uname">Name: John Doe</p>
+            <p id="phone">Mobile: 123-456-7890</p>
+        </div>
+        <div id="alphabet">
+            <p>Recognized Letter:</p>
+            <p id="letter"></p>
+            <p id="feedback"></p>
+        </div>
+        <div id="status">Status: Ready to authenticate</div>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            $.ajax({
+                url: "/api/user",
+                method: "GET",
+                xhrFields: {
+                    withCredentials: true
+                },
+                success: function (data) {
+                    $("#uname").text("Name: " + data.name);
+                    $("#phone").text("Mobile: " + data.phonenumber);
+
+                    const userMobile = data.phonenumber.replace(/\D/g, '');
+                    const startRecordingButton = document.getElementById('startRecording');
+                    const alphabetDiv = document.getElementById('alphabet');
+                    const letterDisplay = document.getElementById('letter');
+                    const feedbackDisplay = document.getElementById('feedback');
+                    const statusMessage = document.getElementById('status');
+
+                    startRecordingButton.addEventListener('click', async () => {
+                        if (annyang) {
+                            const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
+                            let currentIndex = 0;
+                            const commands = {};
+
+                            alphabet.forEach(letter => {
+                                commands[letter] = function () {
+                                    letterDisplay.textContent = letter;
+                                    feedbackDisplay.textContent = '✅';
+                                    currentIndex++;
+
+                                    if (currentIndex === alphabet.length) {
+                                        const fileName = `${userMobile}_voice.wav`;
+                                        saveVoiceRecording(fileName);
+                                    }
+                                };
+                            });
+
+                            annyang.addCommands(commands);
+
+                            annyang.addCallback('resultNoMatch', function () {
+                                // Handle incorrect pronunciation here
+                                letterDisplay.textContent = '❌'; // Show an 'X' for incorrect pronunciation
+                                feedbackDisplay.textContent = 'Try again';
+                            });
+
+                            annyang.start();
+                            startRecordingButton.textContent = 'Listening...';
+                            alphabetDiv.style.display = 'block';
+                            statusMessage.textContent = 'Status: Listening for the alphabet';
+                        }
+                    });
+
+                    function saveVoiceRecording(fileName) {
+                        // Simulated function to save the voice recording
+                        console.log('Voice recording saved with the name:', fileName);
+                        statusMessage.textContent = 'Status: Voice recording saved';
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.log("Error:", error);
+                }
+            });
+        });
+    </script>
+</body>
+</html> {% endcomment %}
+
+{% comment %} <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Registration</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/annyang/2.6.1/annyang.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+        }
+
+        button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #alphabet {
+            display: none;
+        }
+
+        #letter {
+            font-size: 24px;
+            margin-top: 10px;
+        }
+
+        #feedback {
+            font-size: 18px;
+            color: green;
+            margin-top: 5px;
+        }
+
+        #status {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Voice Registration</h1>
+        <button id="startRecording">Start Recording</button>
+        <div id="alphabet">
+            <p>Recognized Letter:</p>
+            <p id="letter"></p>
+            <p id="feedback"></p>
+        </div>
+        <div id="status">Status: Ready to authenticate</div>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            $.ajax({
+                url: "/api/user",
+                method: "GET",
+                xhrFields: {
+                    withCredentials: true
+                },
+                success: function (data) {
+                    $("#uname").text("Name: " + data.name);
+                    $("#phone").text("Mobile: " + data.phonenumber);
+
+                    const userMobile = data.phonenumber.replace(/\D/g, '');
+                    const startRecordingButton = document.getElementById('startRecording');
+                    const alphabetDiv = document.getElementById('alphabet');
+                    const letterDisplay = document.getElementById('letter');
+                    const feedbackDisplay = document.getElementById('feedback');
+                    const statusMessage = document.getElementById('status');
+
+                    startRecordingButton.addEventListener('click', async () => {
+                        if (annyang) {
+                            const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
+                            let currentIndex = 0;
+                            const commands = {};
+
+                            alphabet.forEach(letter => {
+                                commands[letter] = function () {
+                                    letterDisplay.textContent = letter;
+                                    feedbackDisplay.textContent = '✅';
+                                    currentIndex++;
+
+                                    if (currentIndex === alphabet.length) {
+                                        const fileName = `${userMobile}_voice_sample.wav`;
+                                        saveVoiceRecording(fileName);
+                                    }
+                                };
+                            });
+
+                            annyang.addCommands(commands);
+
+                            annyang.addCallback('resultNoMatch', function () {
+                                // Handle incorrect pronunciation here
+                                letterDisplay.textContent = '❌'; // Show an 'X' for incorrect pronunciation
+                                feedbackDisplay.textContent = 'Try again';
+                            });
+
+                            annyang.start();
+                            startRecordingButton.textContent = 'Listening...';
+                            alphabetDiv.style.display = 'block';
+                            statusMessage.textContent = 'Status: Listening for the alphabet';
+                        }
+                    });
+
+                    function saveVoiceRecording(fileName) {
+                        // Simulated function to save the voice recording
+                        console.log('Voice recording saved with the name:', fileName);
+                        statusMessage.textContent = 'Status: Voice recording saved';
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.log("Error:", error);
+                }
+            });
+        });
+    </script>
+</body>
+</html> {% endcomment %}
+
+{% comment %} <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Registration</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/annyang/2.6.1/annyang.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+        }
+
+        button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #alphabet {
+            display: none;
+        }
+
+        #letter {
+            font-size: 24px;
+            margin-top: 10px;
+        }
+
+        #feedback {
+            font-size: 18px;
+            color: green;
+            margin-top: 5px;
+        }
+
+        #status {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Voice Registration</h1>
+        <button id="startRecording">Start Recording</button>
+        <div id="alphabet">
+            <p>Recognized Letter:</p>
+            <p id="letter"></p>
+            <p id="feedback"></p>
+        </div>
+        <div id="status">Status: Ready to authenticate</div>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            $.ajax({
+                url: "/api/user",
+                method: "GET",
+                xhrFields: {
+                    withCredentials: true
+                },
+                success: function (data) {
+                    // Assuming the API response contains user details: id, name, phone
+                    $("#uname").text("Name: " + data.name);
+                    $("#phone").text("Mobile: " + data.phonenumber);
+
+                    const userMobile = data.phonenumber.replace(/\D/g, '');
+                    const startRecordingButton = document.getElementById('startRecording');
+                    const alphabetDiv = document.getElementById('alphabet');
+                    const letterDisplay = document.getElementById('letter');
+                    const feedbackDisplay = document.getElementById('feedback');
+                    const statusMessage = document.getElementById('status');
+
+                    startRecordingButton.addEventListener('click', async () => {
+                        if (annyang) {
+                            const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
+                            let currentIndex = 0;
+                            const commands = {};
+
+                            alphabet.forEach(letter => {
+                                commands[letter] = function () {
+                                    displayRecognizedLetter(letter);
+                                    currentIndex++;
+
+                                    if (currentIndex === alphabet.length) {
+                                        const fileName = `${userMobile}_voice_sample.wav`;
+                                        saveVoiceRecording(fileName);
+                                    }
+                                };
+                            });
+
+                            annyang.addCommands(commands);
+
+                            annyang.addCallback('resultNoMatch', function () {
+                                // Handle incorrect pronunciation here
+                                displayRecognizedLetter('❌', 'Try again');
+                            });
+
+                            annyang.start();
+                            startRecordingButton.textContent = 'Listening...';
+                            alphabetDiv.style.display = 'block';
+                            statusMessage.textContent = 'Status: Listening for the alphabet';
+                        }
+                    });
+
+                    function displayRecognizedLetter(letter, feedback = '✅') {
+                        letterDisplay.textContent = letter;
+                        feedbackDisplay.textContent = feedback;
+                    }
+
+                    function saveVoiceRecording(fileName) {
+                        // Simulated function to save the voice recording
+                        console.log('Voice recording saved with the name:', fileName);
+                        statusMessage.textContent = 'Status: Voice recording saved';
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.log("Error:", error);
+                }
+            });
+        });
+    </script>
+</body>
+</html>  {% endcomment %}
+
+{% comment %} <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Registration</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/annyang/2.6.1/annyang.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+        }
+
+        button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #alphabet {
+            display: none;
+        }
+
+        #letter {
+            font-size: 24px;
+            margin-top: 10px;
+        }
+
+        #feedback {
+            font-size: 18px;
+            color: green;
+            margin-top: 5px;
+        }
+
+        #status {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Voice Registration</h1>
+        <button id="startRecording">Start Recording</button>
+        <div id="alphabet">
+            <p>Recognized Letter:</p>
+            <p id="letter"></p>
+            <p id="feedback"></p>
+        </div>
+        <div id="status">Status: Ready to authenticate</div>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            const startRecordingButton = document.getElementById('startRecording');
+            const alphabetDiv = document.getElementById('alphabet');
+            const letterDisplay = document.getElementById('letter');
+            const feedbackDisplay = document.getElementById('feedback');
+            const statusMessage = document.getElementById('status');
+
+            startRecordingButton.addEventListener('click', async () => {
+                if (annyang) {
+                    const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
+                    let currentIndex = 0;
+                    const commands = {};
+
+                    alphabet.forEach(letter => {
+                        commands[letter] = function () {
+                            displayRecognizedLetter(letter); // Display the recognized letter
+                            currentIndex++;
+
+                            if (currentIndex === alphabet.length) {
+                                saveVoiceRecording();
+                            }
+                        };
+                    });
+
+                    annyang.addCommands(commands);
+
+                    annyang.addCallback('resultNoMatch', function () {
+                        // Handle incorrect pronunciation here
+                        displayRecognizedLetter('❌', 'Try again');
+                    });
+
+                    annyang.start();
+                    startRecordingButton.textContent = 'Listening...';
+                    alphabetDiv.style.display = 'block';
+                    statusMessage.textContent = 'Status: Listening for the alphabet';
+                }
+            });
+
+            function displayRecognizedLetter(letter, feedback = '✅') {
+                letterDisplay.textContent = letter; // Update the displayed letter
+                feedbackDisplay.textContent = feedback;
+            }
+
+            function saveVoiceRecording() {
+                // Simulated function to save the voice recording
+                console.log('Voice recording saved successfully.');
+                statusMessage.textContent = 'Status: Voice recording saved';
+            }
+        });
+    </script>
+</body>
+</html> {% endcomment %}
+
+{% comment %} <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Voice Registration</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <button id="startRecording">Register Voice</button>
+    <button id="verify" style="display:none">Verify</button>
+    <div id="message"></div>
+    <div id="userDetails">
+        <p id="uname">Name: </p>
+        <p id="phone">Mobile: </p>
+    </div>
+    <script>
+        var audioBlob;
+        var userMobile; // Declare userMobile globally
+
+        $(document).ready(function () {
+            $.ajax({
+                url: "/api/user",
+                method: "GET",
+                xhrFields: {
+                    withCredentials: true
+                },
+                success: function (data) {
+                    // Assuming the API response contains user details: id, name, phone
+                    $("#uname").text("Name: " + data.name);
+                    $("#phone").text("Mobile: " + data.phonenumber);
+
+                    // Capture the user's mobile number
+                    userMobile = data.phonenumber.replace(/\D/g, '');
+                },
+                error: function (xhr, status, error) {
+                    console.log("Error:", error);
+                }
+            });
+        });
+
+        $("#startRecording").click(async function () {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                const mediaRecorder = new MediaRecorder(stream);
+                const audioChunks = [];
+
+                mediaRecorder.ondataavailable = event => {
+                    if (event.data.size > 0) {
+                        audioChunks.push(event.data);
+                    }
+                };
+
+                mediaRecorder.onstop = () => {
+                    audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    document.getElementById('verify').style.display = 'block';
+                };
+
+                mediaRecorder.start();
+                setTimeout(() => {
+                    mediaRecorder.stop();
+                }, 10000); // Stop recording after 10 seconds
+            } catch (error) {
+                console.error('Error accessing microphone:', error);
+            }
+        });
+
+        $("#verify").click(function () {
+            const formData = new FormData();
+            const fileName = `${userMobile}_voice_sample.wav`;
+            formData.append('audio', audioBlob, fileName);
+
+            fetch('/upload_voice/', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json()) // Assuming server responds with json
+            .then(data => {
+                if (data.accuracy >= 80) {
+                    $("#message").text("Voice Successfully verified.");
+                } else {
+                    $("#message").text("Verification failed.");
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+
+    </script>
+</body>
+</html> {% endcomment %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Registration</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <button id="startRecording">Register Voice</button>
+    <div id="userDetails">
+        <p id="uname">Name: </p>
+        <p id="phone">Mobile: </p>
+    </div>
+    <div id="verificationArea" style="display: none;">
+        <button id="verifyVoice">Verify</button>
+    </div>
+    <div id="verificationResult"></div>
+    <script>
+        $(document).ready(function () {
+            $.ajax({
+                url: "/api/user",
+                method: "GET",
+                xhrFields: {
+                    withCredentials: true
+                },
+                success: function (data) {
+                    // Assuming the API response contains user details: id, name, phone
+                    $("#uname").text("Name: " + data.name);
+                    $("#phone").text("Mobile: " + data.phonenumber);
+
+                    // Capture the user's mobile number
+                    const userMobile = data.phonenumber.replace(/\D/g, ''); // Remove non-numeric characters
+
+                    const startRecordingButton = document.getElementById('startRecording');
+                    const verifyButton = document.getElementById('verifyVoice');
+                    const verificationArea = document.getElementById('verificationArea');
+                    const verificationResult = document.getElementById('verificationResult');
+
+                    let audioChunks = [];
+                    let mediaRecorder;
+
+                    startRecordingButton.addEventListener('click', async () => {
+                        try {
+                            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                            mediaRecorder = new MediaRecorder(stream);
+                            audioChunks = [];
+
+                            mediaRecorder.ondataavailable = event => {
+                                if (event.data.size > 0) {
+                                    audioChunks.push(event.data);
+                                }
+                            };
+
+                            mediaRecorder.onstop = () => {
+                                verificationArea.style.display = 'block';
+                            };
+
+                            mediaRecorder.start();
+                            setTimeout(() => {
+                                mediaRecorder.stop();
+                            }, 10000); // Stop recording after 10 seconds
+                        } catch (error) {
+                            console.error('Error accessing microphone:', error);
+                        }
+                    });
+
+                    verifyButton.addEventListener('click', async () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                        const formData = new FormData();
+
+                        // Append the user's mobile number as part of the file name.
+                        const fileName = userMobile + '_voice_sample.wav';
+                        formData.append('audio', audioBlob, fileName);
+
+                        // Send the audio data to the server for voice verification via a POST request
+                        fetch('/verify_voice/', {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => {
+                            if (response.ok) {
+                                // Voice verification successful
+                                return response.text();
+                            } else {
+                                // Handle the server's response here if there's an error
+                                return Promise.reject('Error verifying voice.');
+                            }
+                        })
+                        .then(result => {
+                            // Display the verification result
+                            verificationResult.textContent = result;
+                        })
+                        .catch(error => {
+                            console.error('Error verifying voice:', error);
+                        });
+                    });
+                },
+                error: function (xhr, status, error) {
+                    console.log("Error:", error);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

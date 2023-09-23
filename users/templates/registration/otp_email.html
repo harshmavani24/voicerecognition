@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    /* CSS styles go here */
+    body {
+      font-family: Arial, sans-serif;
+      color: #333333;
+    }
+    
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      border: 1px solid #ccc;
+    }
+    
+    .logo {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    
+    .logo img {
+      max-width: 200px;
+    }
+    
+    .message {
+      font-size: 16px;
+      margin-bottom: 20px;
+    }
+    
+    .otp {
+      text-align: center;
+      margin: 20px 0;
+      background-color: #f2f2f2;
+      padding: 10px;
+      border-radius: 5px;
+    }
+    
+    .otp p {
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+    
+    .otp span {
+      font-size: 32px;
+      font-weight: bold;
+    }
+    
+    .reset-button {
+      display: block;
+      text-align: center;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      <img src="http://wibit.in/wp-content/uploads/2021/12/wibit-1.png" alt="Company Logo">
+    </div>
+    <div class="message">
+      <p>Hello {{ user.email }},</p>
+      <p>To verify your account, please use the following OTP:</p>
+    </div>
+    <div class="otp">
+      <p>Your OTP is: <span id="otp">{{ otp }}</span></p>
+    </div>
+    <div>
+      <p>If you didn't request this, please ignore this email.</p>
+    </div>
+  </div>
+</body>
+</html>

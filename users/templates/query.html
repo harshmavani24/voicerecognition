@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Home</title>
+  <style>
+    body {
+      align-items: center;
+      background-color: #f2f2f2;
+      display: flex;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    .garbage-collection-form {
+      background-color: #fff;
+      border-radius: 20px;
+      box-sizing: border-box;
+      padding: 20px;
+      width: 60%;
+      margin: 0 auto;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      animation: formAnimation 0.5s ease-in-out;
+    }
+
+    h2 {
+      color:#7b3f00;
+      font-family: "Lucida Sans", "Lucida Sans Regular", "Lucida Grande",
+        "Lucida Sans Unicode", Geneva, Verdana, sans-serif;
+      font-size: 36px;
+      font-weight: 600;
+      margin-top: 30px;
+      text-align: center;
+    }
+
+    label {
+      color: #333;
+      font-family: "Lucida Sans", "Lucida Sans Regular", "Lucida Grande",
+        "Lucida Sans Unicode", Geneva, Verdana, sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    textarea {
+      background-color: #f2f2f2;
+      border-radius: 12px 12px 12px 12px;
+      box-sizing: border-box;
+      color: #333;
+      font-size: 18px;
+      margin-bottom: 10px;
+      padding: 10px;
+      width: 100%;
+      outline: none;
+      border: none;
+      border-bottom: #7b3f00 2px solid;
+      transition: all 0.3s ease-in-out;
+    }
+
+    input[type="text"]:focus,
+    input[type="email"]:focus,
+    textarea:focus {
+      background-color: #e4e4e4;
+    }
+
+    .placeholder {
+      color: #808080;
+      font-family: Arial, sans-serif;
+      left: 20px;
+      line-height: 14px;
+      pointer-events: none;
+      position: absolute;
+      transform-origin: 0 50%;
+      transition: transform 200ms, color 200ms;
+      top: 20px;
+    }
+
+    button[type="button"],
+    button[type="submit"] {
+      background-color: #7b3f00;
+      border-radius: 12px;
+      border: none;
+      box-sizing: border-box;
+      color: #fff;
+      cursor: pointer;
+      font-size: 18px;
+      height: 50px;
+      margin-top: 38px;
+      outline: none;
+      text-align: center;
+      width: 48%;
+      transition: background-color 0.3s ease;
+      font-family: "Lucida Sans", "Lucida Sans Regular", "Lucida Grande",
+        "Lucida Sans Unicode", Geneva, Verdana, sans-serif;
+    }
+    div.button-container {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    button[type="button"]:hover,
+    button[type="submit"]:hover {
+      background-color: #9e4111;
+    }
+
+    button[type="button"]:active,
+    button[type="submit"]:active {
+      background-color: #006380;
+    }
+
+    .date-time-container {
+      display: flex;
+      margin-bottom: 10px;
+    }
+
+    div:nth-child(6) {
+      margin-bottom: 20px;
+    }
+
+    @keyframes formAnimation {
+      0% {
+        transform: scale(0);
+        opacity: 0;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+  </style>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+    function getLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(showPosition);
+      } else {
+        alert('Geolocation is not supported by this browser.');
+      }
+    }
+  
+    function showPosition(position) {
+      const latitude = position.coords.latitude.toFixed(6);
+      const longitude = position.coords.longitude.toFixed(6);
+      const mapLink = `https://maps.google.com/?q=${latitude},${longitude}`;
+  
+      $('#link').val(mapLink);
+    }
+  
+    $(document).ready(function() {
+      const now = new Date();
+      const formattedDate = now.toISOString().split('T')[0];
+      const formattedTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
+      $('#date').val(formattedDate);
+      $('#time').val(formattedTime);
+      
+      $('#queryForm').submit(function(event) {
+        event.preventDefault();
+        
+        const formData = new FormData(this);
+    
+        // Append additional fields to the FormData object if needed
+        formData.append('additional_field_name', 'additional_field_value');
+      
+        $.ajax({
+          url: '/api/query',
+          method: 'POST',
+          data: formData,
+          processData: false,
+          contentType: false,
+          success: function(data) {
+            console.log(data);
+            $('#queryForm')[0].reset();
+            window.location.href = '/home';
+          },
+          error: function(error) {
+            console.error(error);
+            alert('Error submitting the query');
+          }
+        });
+      });
+    });
+    
+  </script>
+</head>
+<body>
+  <div class="garbage-collection-form">
+    <h2>Garbage Collection Form</h2>
+    <form id="queryForm" method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      
+      <label for="name">Name:</label>
+      <input type="text" id="name" name="name" required>
+      
+      <label for="phone">Phone:</label>
+      <input type="text" id="phone" name="phone" required>
+      
+      <label for="email">Email:</label>
+      <input type="email" id="email" name="email" required>
+      
+      <label for="link">Link:</label>
+      <input type="text" id="link" name="link" required>
+
+      {% comment %} <label for="location">Location:</label>
+      <input type="text" id="location" name="location" readonly required> {% endcomment %}
+      
+      <label for="message">Message:</label>
+      <textarea id="message" name="message" required></textarea>
+      
+      <label for="photos">Photos:</label>
+      <input type="file" id="photos" name="photos" accept="image/*" multiple>
+      
+      <label for="date">Date:</label>
+      <input type="date" id="date" name="date" required>
+      
+      <label for="time">Time:</label>
+      <input type="time" id="time" name="time" required>
+      
+
+      
+      <button type="button" onclick="getLocation()">Get Location</button>
+      <button type="submit">Submit</button>
+    </form>
+  </div>
+</body>
+</html>

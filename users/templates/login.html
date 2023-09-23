@@ -1,0 +1,239 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login</title>    
+    <style>
+      * {
+        margin: 0px;
+        padding: 0px;
+      }
+      .container {
+        height: 100vh;
+        width: 100%;
+        background-image: url("{% static 'users/bg.jpg' %}");
+        background-size: cover;
+        background-position: center;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .box {
+        height: 700px;
+        width: 600px;
+        background-color: rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(8px);
+        border-radius: 30px;
+        display: flex;
+        justify-content: center;
+        flex-direction: column;
+        font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande",
+          "Lucida Sans", Arial, sans-serif;
+        padding-top: 50px;
+      }
+      .box1 {
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+        margin-top: -40px;
+      }
+
+      h2 {
+        text-align: center;
+        color: #7b3f00;
+        font-size: 60px;
+        font-weight: 700;
+        margin-top: -50px;
+        margin-bottom: 30px;
+      }
+      input[type="text"],
+      input[type="password"],
+      .forgot input,
+      .verifyotp input {
+        background-color: #F7F1E5;
+        border: none;
+        outline: none;
+        border-radius: 40px;
+        padding: 10px;
+        margin-top: 50px;
+        width: 400px;
+        height: 30px;
+        font-size: 22px;
+        color: #4C4B16;
+        font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande",
+          "Lucida Sans", Arial, sans-serif;
+        transition: all 0.3s ease-in-out;
+      }
+      input[type="text"]:focus,
+      input[type="password"]:focus {
+        background-color: rgba(255, 255, 255, 0.9);
+      }
+      input[type="text"] {
+        background-image: url("{% static 'users/user.png' %}");
+        background-position: right top;
+        background-repeat: no-repeat;
+        background-size: contain;
+      }
+      input[type="password"] {
+        background-image: url("{% static 'users/lock.png' %}");
+        background-position: 99.5% 60%;
+        background-repeat: no-repeat;
+        background-size: 10.5%;
+      }
+      input::-webkit-outer-spin-button,
+      input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+      .box2 {
+        display: flex;
+        align-items: center;
+        gap: 80px;
+        flex-direction: row;
+        margin-top: 50px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      #error-message {
+        text-align: center;
+        color: red;
+        font-size: 18px;
+        margin-top: 10px;
+      }
+      .box2 input[type="checkbox"],
+      .box2 label,
+      .box2 a {
+        margin: 0;
+        font-size: 20px;
+        color: white;
+      }
+      .box2 label {
+        margin-left: -70px;
+      }
+
+      button {
+        background-color: #7b3f00;
+        color: white;
+        width: 300px;
+        height: 70px;
+        border-radius: 40px;
+        border: none;
+        margin-left: auto;
+        margin-right: auto;
+        margin-top: 50px;
+        font-size: 40px;
+        transition: all 0.4s ease-in-out;
+        cursor: pointer;
+      }
+      button:active {
+        transform: scale(0.6);
+      }
+      p {
+        text-align: center;
+        margin-top: 30px;
+        margin-bottom: -30px;
+        font-size: 20px;
+        color: white;
+      }
+      #signup,
+      #forgotpass {
+        color: blue;
+      }
+      #signup:hover,
+      #forgotpass:hover {
+        color: rgb(65, 40, 128);
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="box">
+        <div class="box1">
+          <h2>Welcome Back</h2>
+          <input
+            type="text"
+            name="username"
+            id="username"
+            required
+            placeholder="Username"
+          />
+          <input
+            type="password"
+            name="password"
+            id="password"
+            required
+            placeholder="Password"
+          />
+        </div>
+        <div id="error-message"></div>
+        <div class="box2">
+           <input
+            type="checkbox"
+            name="remember"
+            id="remember"
+            style="height: 20px; width: 20px"
+          /> 
+          <label for="remember">Remember Password</label>
+          <a id="forgotpass" href="/forgot">Forgot Password</a>
+        </div>
+        <button type="submit" name="login" id="login">Login</button>
+        {% comment %} script to check login {% endcomment %}
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script>
+          $(document).ready(function() {
+            $('#login').click(function(event) {
+              event.preventDefault(); // Prevent the default form submission behavior
+      
+              // Get the input values
+              var username = $('#username').val();
+              var password = $('#password').val();
+      
+              // Create the data object
+              var data = {
+                email: username,
+                password: password
+              };
+      
+              // Send the AJAX request
+              $.ajax({
+                type: 'POST',
+                url: '/api/login',
+                data: JSON.stringify(data),
+                contentType: 'application/json',
+                success: function(response) {
+                  // Handle the successful response
+                  //console.log("success");
+                  if (response.redirect_url) {
+                    // Redirect the user to the specified URL
+                    var redirectUrl = '/verify/?email=' + encodeURIComponent(username);
+                    window.location.href = redirectUrl
+                  } else {
+                    // Perform any other actions for a successful login
+                    window.location.href = '/home';
+                    console.log('Login successful');
+                  }
+                  // Redirect the user to a new page or perform any other actions
+                },
+                error: function(error) {
+                  // Handle the error response
+                  if (error.responseJSON) {
+                    // Display the error message in the HTML page
+                    $('#error-message').text(error.responseJSON.detail);
+                  } else {
+                    $('#error-message').text('An error occurred. Please try again.');
+                  }
+                }
+              });
+            });
+          });
+        </script>
+
+        <p>Don't have an account? <a id="signup" href="/signup">Sign Up</a></p>
+      </div>
+    </div>
+  </body>
+</html>

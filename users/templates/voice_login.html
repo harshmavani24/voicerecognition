@@ -1,0 +1,362 @@
+{% comment %} <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Authentication</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+        }
+
+        button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        audio {
+            width: 100%;
+        }
+
+        #status {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Voice Authentication</h1>
+        <div id="status">Status: Ready to authenticate</div>
+        <button id="startRecording">Start Recording</button>
+        <button id="authenticate" style="display: none;">Authenticate</button>
+        <button id="reRecord" style="display: none;">Re-record</button>
+        <audio id="audioPlayback" controls style="display: none;"></audio>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            let mediaRecorder;
+            let audioChunks = [];
+            let isRecording = false;
+
+            const startRecordingButton = document.getElementById('startRecording');
+            const authenticateButton = document.getElementById('authenticate');
+            const reRecordButton = document.getElementById('reRecord');
+            const audioPlayback = document.getElementById('audioPlayback');
+            const statusMessage = document.getElementById('status');
+
+            startRecordingButton.addEventListener('click', () => {
+                if (!isRecording) {
+                    isRecording = true;
+                    startRecordingButton.style.display = 'none';
+                    reRecordButton.style.display = 'none';
+                    statusMessage.textContent = 'Status: Recording...';
+
+                    navigator.mediaDevices.getUserMedia({ audio: true })
+                        .then(stream => {
+                            mediaRecorder = new MediaRecorder(stream);
+                            mediaRecorder.ondataavailable = event => {
+                                if (event.data.size > 0) {
+                                    audioChunks.push(event.data);
+                                }
+                            };
+
+                            mediaRecorder.onstop = () => {
+                                isRecording = false;
+                                authenticateButton.style.display = 'inline-block';
+                                reRecordButton.style.display = 'inline-block';
+                                audioPlayback.style.display = 'inline-block';
+                                statusMessage.textContent = 'Status: Recording stopped.';
+
+                                const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                                audioPlayback.src = URL.createObjectURL(audioBlob);
+                            };
+
+                            mediaRecorder.start();
+
+                            // Automatically stop recording after 5 seconds
+                            setTimeout(() => {
+                                mediaRecorder.stop();
+                            }, 5000);
+                        })
+                        .catch(error => {
+                            console.error('Error accessing microphone:', error);
+                            statusMessage.textContent = 'Status: Error accessing microphone.';
+                        });
+                }
+            });
+
+            reRecordButton.addEventListener('click', () => {
+                audioChunks = [];
+                audioPlayback.style.display = 'none';
+                authenticateButton.style.display = 'none';
+                reRecordButton.style.display = 'none';
+                startRecordingButton.style.display = 'inline-block';
+                statusMessage.textContent = 'Status: Ready to authenticate';
+            });
+
+            authenticateButton.addEventListener('click', () => {
+                // Simulate authentication (replace with actual logic)
+                const voiceData = audioChunks; // Send the recorded audio data to the server
+                authenticate(voiceData);
+            });
+
+            function authenticate(voiceData) {
+                // Simulated server-side authentication logic
+                // In a real-world scenario, you'd send this data to the server for analysis.
+                // Here, we just simulate it by checking the length of the recorded audio.
+                if (voiceData.length > 0) {
+                    statusMessage.textContent = 'Status: Authentication successful.';
+                } else {
+                    statusMessage.textContent = 'Status: Authentication failed.';
+                }
+            }
+        });
+    </script>
+</body>
+</html> {% endcomment %}
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Voice Authentication</title>
+    <link rel="stylesheet" href="profile.css" />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        background-color: hsl(0, 0%, 94%);
+      }
+
+      .container {
+        width: 500px;
+        height: auto;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #fff;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        border-radius: 20px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+
+      button {
+        display: inline-block;
+        padding: 10px 20px;
+        margin: 10px;
+        background-color: #007bff;
+        width: 150px;
+        font-size: 15px;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background-color: #0056b3;
+      }
+
+      audio {
+        width: 80%;
+        margin-top: 20px;
+      }
+
+      #status {
+        margin: 20px;
+      }
+
+      .center {
+        height: auto;
+        justify-content: center;
+        align-items: center;
+        background: transparent;
+        display: none;
+      }
+      .wave {
+        width: 5px;
+        height: 30px;
+        background: linear-gradient(45deg, rgb(39, 132, 252), #103673);
+        margin: 10px;
+        animation: wave 1s linear infinite;
+        border-radius: 20px;
+      }
+      .wave:nth-child(2) {
+        animation-delay: 0.1s;
+      }
+      .wave:nth-child(3) {
+        animation-delay: 0.2s;
+      }
+      .wave:nth-child(4) {
+        animation-delay: 0.3s;
+      }
+      .wave:nth-child(5) {
+        animation-delay: 0.4s;
+      }
+      .wave:nth-child(6) {
+        animation-delay: 0.5s;
+      }
+      .wave:nth-child(7) {
+        animation-delay: 0.6s;
+      }
+      .wave:nth-child(8) {
+        animation-delay: 0.7s;
+      }
+      .wave:nth-child(9) {
+        animation-delay: 0.8s;
+      }
+      .wave:nth-child(10) {
+        animation-delay: 0.9s;
+      }
+
+      @keyframes wave {
+        0% {
+          transform: scale(0);
+        }
+        50% {
+          transform: scale(1);
+        }
+        100% {
+          transform: scale(0);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Voice Authentication</h1>
+      <div id="status">Ready to authenticate</div>
+      <div class="center" id="centerDiv">
+        <div class="wave"></div>
+        <div class="wave"></div>
+        <div class="wave"></div>
+        <div class="wave"></div>
+        <div class="wave"></div>
+        <div class="wave"></div>
+        <div class="wave"></div>
+        <div class="wave"></div>
+        <div class="wave"></div>
+        <div class="wave"></div>
+      </div>
+      <button id="startRecording">Start Recording</button>
+      <button id="authenticate" style="display: none">Authenticate</button>
+      <button id="reRecord" style="display: none">Re-record</button>
+      <audio id="audioPlayback" controls style="display: none"></audio>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        let mediaRecorder;
+        let audioChunks = [];
+        let isRecording = false;
+
+        const startRecordingButton = document.getElementById("startRecording");
+        const authenticateButton = document.getElementById("authenticate");
+        const reRecordButton = document.getElementById("reRecord");
+        const audioPlayback = document.getElementById("audioPlayback");
+        const statusMessage = document.getElementById("status");
+        const centerDiv = document.getElementById("centerDiv");
+
+        startRecordingButton.addEventListener("click", () => {
+          if (!isRecording) {
+            isRecording = true;
+            startRecordingButton.style.display = "none";
+            reRecordButton.style.display = "none";
+            statusMessage.textContent = "Recording...";
+            centerDiv.style.display = "flex";
+
+            navigator.mediaDevices
+              .getUserMedia({ audio: true })
+              .then((stream) => {
+                mediaRecorder = new MediaRecorder(stream);
+                mediaRecorder.ondataavailable = (event) => {
+                  if (event.data.size > 0) {
+                    audioChunks.push(event.data);
+                  }
+                };
+
+                mediaRecorder.onstop = () => {
+                  isRecording = false;
+                  authenticateButton.style.display = "inline-block";
+                  reRecordButton.style.display = "inline-block";
+                  audioPlayback.style.display = "inline-block";
+                  statusMessage.textContent = "Recording stopped.";
+                  centerDiv.style.display = "none";
+
+                  const audioBlob = new Blob(audioChunks, {
+                    type: "audio/wav",
+                  });
+                  audioPlayback.src = URL.createObjectURL(audioBlob);
+                };
+
+                mediaRecorder.start();
+
+                // Automatically stop recording after 5 seconds
+                setTimeout(() => {
+                  mediaRecorder.stop();
+                }, 5000);
+              })
+              .catch((error) => {
+                console.error("Error accessing microphone:", error);
+                statusMessage.textContent = "Error accessing microphone.";
+                statusMessage.style.color = "red";
+              });
+          }
+        });
+
+        reRecordButton.addEventListener("click", () => {
+          audioChunks = [];
+          audioPlayback.style.display = "none";
+          authenticateButton.style.display = "none";
+          reRecordButton.style.display = "none";
+          startRecordingButton.style.display = "inline-block";
+          statusMessage.textContent = "Ready to authenticate";
+        });
+
+        authenticateButton.addEventListener("click", () => {
+          // Simulate authentication (replace with actual logic)
+          const voiceData = audioChunks; // Send the recorded audio data to the server
+          authenticate(voiceData);
+        });
+
+        function authenticate(voiceData) {
+          // Simulated server-side authentication logic
+          // In a real-world scenario, you'd send this data to the server for analysis.
+          // Here, we just simulate it by checking the length of the recorded audio.
+          if (voiceData.length > 0) {
+            statusMessage.textContent = "Authentication successful.";
+          } else {
+            statusMessage.textContent = "Authentication failed.";
+          }
+        }
+      });
+    </script>
+  </body>
+</html>

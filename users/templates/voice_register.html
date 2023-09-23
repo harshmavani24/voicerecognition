@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>User Voice Registration</title>
+</head>
+
+<body>
+
+  <h1>Real-Time Transcription</h1>
+  
+  <div id="controls">
+    <button id="start">Start</button>
+    <button id="stop">Stop</button>
+  </div>    
+
+  <div id="transcript"></div>
+
+  <script>
+
+    const socket = new WebSocket('ws://localhost:8000/ws/transcript');
+
+    let transcriptDiv = document.getElementById('transcript');
+    let startBtn = document.getElementById('start');
+    let stopBtn = document.getElementById('stop');
+
+    let mediaRecorder;
+
+    startBtn.onclick = () => {
+      navigator.mediaDevices.getUserMedia({audio: true})
+        .then(stream => {
+          mediaRecorder = new MediaRecorder(stream);
+
+          mediaRecorder.ondataavailable = (e) => {
+            socket.send(e.data);
+          }
+
+          mediaRecorder.start();
+        });
+    }
+
+    stopBtn.onclick = () => {
+      mediaRecorder.stop();
+    }
+
+    socket.onmessage = (e) => {
+      const transcript = e.data;
+      transcriptDiv.innerText += ` ${transcript}\n`;
+    }
+
+  </script>
+
+</body>
+</html>

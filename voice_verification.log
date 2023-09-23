@@ -1,0 +1,35 @@
+INFO:django.utils.autoreload:/home/d3vil/Wibit/project/users/views.py changed, reloading.
+INFO:django.utils.autoreload:/home/d3vil/Wibit/project/users/views.py changed, reloading.
+INFO:django.utils.autoreload:/home/d3vil/Wibit/project/users/views.py changed, reloading.
+INFO:django.utils.autoreload:/home/d3vil/Wibit/project/users/views.py changed, reloading.
+DEBUG:root:Received POST request to /verify_voice/
+DEBUG:pydub.converter:subprocess.call(['ffmpeg', '-y', '-read_ahead_limit', '-1', '-i', 'cache:pipe:0', '-acodec', 'pcm_s32le', '-vn', '-f', 'wav', '-'])
+DEBUG:root:Speech recognition successful.
+WARNING:django.request:Bad Request: /verify_voice/
+INFO:django.utils.autoreload:/home/d3vil/Wibit/project/users/views.py changed, reloading.
+INFO:django.utils.autoreload:/home/d3vil/Wibit/project/users/views.py changed, reloading.
+INFO:django.utils.autoreload:/home/d3vil/Wibit/project/users/views.py changed, reloading.
+INFO:django.utils.autoreload:/home/d3vil/Wibit/project/users/views.py changed, reloading.
+DEBUG:root:Received POST request to /verify_voice/
+DEBUG:pydub.converter:subprocess.call(['ffmpeg', '-y', '-read_ahead_limit', '-1', '-i', 'cache:pipe:0', '-acodec', 'pcm_s32le', '-vn', '-f', 'wav', '-'])
+ERROR:root:Could not understand audio.
+ERROR:django.request:Internal Server Error: /verify_voice/
+Traceback (most recent call last):
+  File "/home/d3vil/Wibit/env/lib/python3.11/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/d3vil/Wibit/env/lib/python3.11/site-packages/django/core/handlers/base.py", line 204, in _get_response
+    self.check_response(response, callback)
+  File "/home/d3vil/Wibit/env/lib/python3.11/site-packages/django/core/handlers/base.py", line 332, in check_response
+    raise ValueError(
+ValueError: The view users.views.verify_voice didn't return an HttpResponse object. It returned None instead.
+INFO:django.utils.autoreload:/home/d3vil/Wibit/project/users/views.py changed, reloading.
+INFO:django.utils.autoreload:/home/d3vil/Wibit/project/users/views.py changed, reloading.
+DEBUG:root:Received POST request to /verify_voice/
+DEBUG:pydub.converter:subprocess.call(['ffmpeg', '-y', '-read_ahead_limit', '-1', '-i', 'cache:pipe:0', '-acodec', 'pcm_s32le', '-vn', '-f', 'wav', '-'])
+ERROR:root:Could not understand audio.
+ERROR:django.request:Internal Server Error: /verify_voice/
+DEBUG:root:Received POST request to /verify_voice/
+DEBUG:pydub.converter:subprocess.call(['ffmpeg', '-y', '-read_ahead_limit', '-1', '-i', 'cache:pipe:0', '-acodec', 'pcm_s32le', '-vn', '-f', 'wav', '-'])
+DEBUG:root:Speech recognition successful.
+WARNING:django.request:Bad Request: /verify_voice/
