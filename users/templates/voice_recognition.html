@@ -1,0 +1,128 @@
+{% comment %} <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Recognition</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+
+<h2>Voice Recognition System</h2>
+
+<button id="trainBtn">Train Model</button>
+<button id="predictBtn">Predict User Voice</button>
+
+<p id="messageBox"></p>
+
+<script>
+    $(document).ready(function(){
+        $("#trainBtn").click(function(){
+            $.get("/train_voice_model/", function(data){
+                $("#messageBox").text(data.message);
+            }).fail(function(){
+                $("#messageBox").text("An error occurred while training the model.");
+            });
+        });
+
+        $("#predictBtn").click(function(){
+            $.get("/predict_user_voice/", function(data){
+                if(data.status === "success") {
+                    $("#messageBox").text("Predicted User: " + data.predicted_user);
+                } else {
+                    $("#messageBox").text(data.message);
+                }
+            }).fail(function(){
+                $("#messageBox").text("An error occurred while predicting the user's voice.");
+            });
+        });
+    });
+</script>
+
+</body>
+</html> {% endcomment %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Recognition</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  background-color: hsl(0, 0%, 94%);
+}
+
+.container {
+  width: 500px;
+  height: auto;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #fff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+button {
+  display: inline-block;
+  padding: 10px 20px;
+  margin: 10px;
+  background-color: #007bff;
+  width: 170px;
+  font-size: 15px;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+
+<h2>Voice Recognition System</h2>
+
+<button id="trainBtn">Train Model</button>
+<button id="predictBtn">Predict User Voice</button>
+
+<p id="messageBox"></p>
+</div>
+<script>
+    $(document).ready(function(){
+        $("#trainBtn").click(function(){
+            $.get("/train_voice_model/", function(data){
+                $("#messageBox").text(data.message);
+            }).fail(function(){
+                document.getElementById("messageBox").style.color = "red";
+                $("#messageBox").text("An error occurred while training the model.");
+            });
+        });
+
+        $("#predictBtn").click(function(){
+            $.get("/predict_user_voice/", function(data){
+                if(data.status === "success") {
+                    $("#messageBox").text("Predicted User: " + data.predicted_user);
+                } else {
+                    $("#messageBox").text(data.message);
+                }
+            }).fail(function(){
+                document.getElementById("messageBox").style.color = "red";
+                $("#messageBox").text("An error occurred while predicting the user's voice.");
+
+            });
+        });
+    });
+</script>
+
+</body>
+</html>

@@ -329,7 +329,36 @@ def voice_registration(request):
     return render(request,'voice_registration.html')
 
 def voice_login(request):
-    return render(request,'voice_login.html')
+    if request.method == 'GET':
+        return render(request,'voice_login.html')
+    if request.method == 'POST':
+        r = sr.Recognizer()
+        with sr.Microphone() as source:
+            r.adjust_for_ambient_noise(source)
+            print("Please say something")
+            audio = r.listen(source)
+            print("Recognizing Now .... ")
+
+            try:
+                recognized_text = r.recognize_google(audio)
+                print("You have said: " + recognized_text)
+            except sr.UnknownValueError:
+                print("Google Speech Recognition could not understand audio")
+                recognized_text = None
+            except sr.RequestError as e:
+                print(f"Could not request results from Google Speech Recognition service; {e}")
+                recognized_text = None
+
+            save_path = os.path.join("media", "recorded.wav")
+            with open(save_path, "wb") as f:
+                f.write(audio.get_wav_data())
+
+            response_data = {
+                "success": True,
+                "recognized_text": recognized_text,
+                "message": "Voice recording saved successfully.",
+            }
+            return JsonResponse(response_data)
 import os
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -341,9 +370,11 @@ from django.utils.decorators import method_decorator
 from django.views import View
 
 from django.http import JsonResponse
+from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
-from django.views import View
+
+MEDIA_DIR = os.path.join(settings.BASE_DIR, 'reference_voice')
 
 @method_decorator(csrf_exempt, name='dispatch')
 class UploadVoiceView(View):
@@ -351,13 +382,8 @@ class UploadVoiceView(View):
         try:
             audio_file = request.FILES['audio']
 
-            # Retrieve the user's mobile number from the file name.
-            # Assuming the format is 'user_mobile_voice_sample.wav'.
-            file_name_parts = audio_file.name.split('_')
-            user_mobile = file_name_parts[0]
-
-            # Save the audio file with the user's mobile number as part of the name.
-            with open(f'voice_samples/{user_mobile}_voice_register.wav', 'wb') as destination:
+            # Save the audio file as '1.wav' in the 'reference_voice' directory.
+            with open(os.path.join(MEDIA_DIR, '1.wav'), 'wb') as destination:
                 for chunk in audio_file.chunks():
                     destination.write(chunk)
 
@@ -365,10 +391,6 @@ class UploadVoiceView(View):
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)
 
-import os
-import speech_recognition as sr
-from django.shortcuts import render
-from django.http import JsonResponse
 
 # Import the speech recognition library
 import speech_recognition as sr
@@ -409,46 +431,40 @@ def voice_registration(request):
             return JsonResponse(response_data)
 
     return render(request, 'voice_registration.html')
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-import speech_recognition as sr  # Make sure to install the 'SpeechRecognition' library
-from pydub import AudioSegment
-import io
-import logging
-import difflib  # We'll use difflib to calculate similarity
-logging.basicConfig(filename='voice_verification.log', level=logging.DEBUG)
+
+
 # Helper function to calculate text similarity
-def calculate_similarity(text1, text2):
-    # Function to calculate similarity between two strings using Levenshtein distance
+# def calculate_similarity(text1, text2):
+#     # Function to calculate similarity between two strings using Levenshtein distance
     
-    # Length of the input strings
-    len_text1 = len(text1)
-    len_text2 = len(text2)
+#     # Length of the input strings
+#     len_text1 = len(text1)
+#     len_text2 = len(text2)
 
-    # Create a matrix to store Levenshtein distances
-    distance_matrix = [[0] * (len_text2 + 1) for _ in range(len_text1 + 1)]
+#     # Create a matrix to store Levenshtein distances
+#     distance_matrix = [[0] * (len_text2 + 1) for _ in range(len_text1 + 1)]
 
-    # Initialize the matrix
-    for i in range(len_text1 + 1):
-        distance_matrix[i][0] = i
-    for j in range(len_text2 + 1):
-        distance_matrix[0][j] = j
+#     # Initialize the matrix
+#     for i in range(len_text1 + 1):
+#         distance_matrix[i][0] = i
+#     for j in range(len_text2 + 1):
+#         distance_matrix[0][j] = j
 
-    # Fill in the matrix
-    for i in range(1, len_text1 + 1):
-        for j in range(1, len_text2 + 1):
-            cost = 0 if text1[i - 1] == text2[j - 1] else 1
-            distance_matrix[i][j] = min(
-                distance_matrix[i - 1][j] + 1,  # Deletion
-                distance_matrix[i][j - 1] + 1,  # Insertion
-                distance_matrix[i - 1][j - 1] + cost  # Substitution
-            )
+#     # Fill in the matrix
+#     for i in range(1, len_text1 + 1):
+#         for j in range(1, len_text2 + 1):
+#             cost = 0 if text1[i - 1] == text2[j - 1] else 1
+#             distance_matrix[i][j] = min(
+#                 distance_matrix[i - 1][j] + 1,  # Deletion
+#                 distance_matrix[i][j - 1] + 1,  # Insertion
+#                 distance_matrix[i - 1][j - 1] + cost  # Substitution
+#             )
 
-    # Calculate similarity as a value between 0 and 1
-    max_len = max(len_text1, len_text2)
-    similarity = 1 - (distance_matrix[len_text1][len_text2] / max_len)
+#     # Calculate similarity as a value between 0 and 1
+#     max_len = max(len_text1, len_text2)
+#     similarity = 1 - (distance_matrix[len_text1][len_text2] / max_len)
 
-    return similarity
+#     return similarity
 
 @csrf_exempt
 def voice_registration(request):
@@ -482,60 +498,657 @@ def voice_registration(request):
             return JsonResponse(response_data)
 
     return render(request, 'voice_registration.html')
+# phase 2 render .html view code
+@csrf_exempt
+def voice_registration2(request):
+    if request.method == 'POST':
+        r = sr.Recognizer()
+        with sr.Microphone() as source:
+            r.adjust_for_ambient_noise(source)
+            print("Please say something")
+            audio = r.listen(source)
+            print("Recognizing Now .... ")
+
+            try:
+                recognized_text = r.recognize_google(audio)
+                print("You have said: " + recognized_text)
+            except sr.UnknownValueError:
+                print("Google Speech Recognition could not understand audio")
+                recognized_text = None
+            except sr.RequestError as e:
+                print(f"Could not request results from Google Speech Recognition service; {e}")
+                recognized_text = None
+
+            save_path = os.path.join("media", "recorded.wav")
+            with open(save_path, "wb") as f:
+                f.write(audio.get_wav_data())
+
+            response_data = {
+                "success": True,
+                "recognized_text": recognized_text,
+                "message": "Voice recording saved successfully.",
+            }
+            return JsonResponse(response_data)
+
+    return render(request, 'phase2.html')
+
+def voice_registration3(request):
+    if request.method == 'POST':
+        r = sr.Recognizer()
+        with sr.Microphone() as source:
+            r.adjust_for_ambient_noise(source)
+            print("Please say something")
+            audio = r.listen(source)
+            print("Recognizing Now .... ")
+
+            try:
+                recognized_text = r.recognize_google(audio)
+                print("You have said: " + recognized_text)
+            except sr.UnknownValueError:
+                print("Google Speech Recognition could not understand audio")
+                recognized_text = None
+            except sr.RequestError as e:
+                print(f"Could not request results from Google Speech Recognition service; {e}")
+                recognized_text = None
+
+            save_path = os.path.join("media", "recorded.wav")
+            with open(save_path, "wb") as f:
+                f.write(audio.get_wav_data())
+
+            response_data = {
+                "success": True,
+                "recognized_text": recognized_text,
+                "message": "Voice recording saved successfully.",
+            }
+            return JsonResponse(response_data)
+
+    return render(request, 'phase3.html')
+
+def voice_registration4(request):
+    if request.method == 'POST':
+        r = sr.Recognizer()
+        with sr.Microphone() as source:
+            r.adjust_for_ambient_noise(source)
+            print("Please say something")
+            audio = r.listen(source)
+            print("Recognizing Now .... ")
+
+            try:
+                recognized_text = r.recognize_google(audio)
+                print("You have said: " + recognized_text)
+            except sr.UnknownValueError:
+                print("Google Speech Recognition could not understand audio")
+                recognized_text = None
+            except sr.RequestError as e:
+                print(f"Could not request results from Google Speech Recognition service; {e}")
+                recognized_text = None
+
+            save_path = os.path.join("media", "recorded.wav")
+            with open(save_path, "wb") as f:
+                f.write(audio.get_wav_data())
+
+            response_data = {
+                "success": True,
+                "recognized_text": recognized_text,
+                "message": "Voice recording saved successfully.",
+            }
+            return JsonResponse(response_data)
+
+    return render(request, 'phase4.html')
+
+def voice_registration5(request):
+    if request.method == 'POST':
+        r = sr.Recognizer()
+        with sr.Microphone() as source:
+            r.adjust_for_ambient_noise(source)
+            print("Please say something")
+            audio = r.listen(source)
+            print("Recognizing Now .... ")
+
+            try:
+                recognized_text = r.recognize_google(audio)
+                print("You have said: " + recognized_text)
+            except sr.UnknownValueError:
+                print("Google Speech Recognition could not understand audio")
+                recognized_text = None
+            except sr.RequestError as e:
+                print(f"Could not request results from Google Speech Recognition service; {e}")
+                recognized_text = None
+
+            save_path = os.path.join("media", "recorded.wav")
+            with open(save_path, "wb") as f:
+                f.write(audio.get_wav_data())
+
+            response_data = {
+                "success": True,
+                "recognized_text": recognized_text,
+                "message": "Voice recording saved successfully.",
+            }
+            return JsonResponse(response_data)
+
+    return render(request, 'phase5.html')
+
+
+
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import assemblyai as aai
+import os
+import re
+# Set the API key for AssemblyAI
+aai.settings.api_key = "1d45957af17045c397a7c22a7d880ce1"
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MEDIA_DIR = os.path.join(BASE_DIR, 'voicesamples')
+
+# Ensure the media directory exists
+if not os.path.exists(MEDIA_DIR):
+    os.makedirs(MEDIA_DIR)
 
 @csrf_exempt
-def verify_voice(request):
-    logging.debug('Received POST request to /verify_voice/')
+def phase1(request):
+    if request.method == 'POST' and request.FILES['audio']:
+        audio_file = request.FILES['audio']
 
-    if request.method == 'POST':
-        audio_file = request.FILES.get('audio')
+        # Get the user's mobile number from the file name
+        file_name = audio_file.name
+        userMobile = file_name.split('_')[0]  # Assuming the mobile number is at the beginning of the file name
 
-        # Check if the uploaded file is in a supported format
-        if not audio_file.name.lower().endswith(('.wav', '.aiff', '.aif', '.flac')):
-            return JsonResponse({'message': 'Unsupported audio format.'}, status=400)
+        # Save the audio file in the media directory with the correct file name format
+        file_path = os.path.join(MEDIA_DIR, file_name)
+        with open(file_path, 'wb+') as destination:
+            for chunk in audio_file.chunks():
+                destination.write(chunk)
+        def levenshtein_distance(s, t):
+                """
+                Compute the Levenshtein distance between two strings.
+                """
+                if len(s) > len(t):
+                    s, t = t, s
 
-        # Convert the audio to PCM WAV format
+                # Previous row of distances
+                previous_row = range(len(t) + 1)
+
+                for i, c1 in enumerate(s):
+                    # Current row of distances
+                    current_row = [i + 1]
+
+                    for j, c2 in enumerate(t):
+                        insertions = previous_row[j + 1] + 1  # j+1 instead of j since previous_row and current_row are one character longer
+                        deletions = current_row[j] + 1        # than s and t
+                        substitutions = previous_row[j] + (c1 != c2)
+                        current_row.append(min(insertions, deletions, substitutions))
+
+                    # Previous row of distances becomes current row
+                    previous_row = current_row
+
+                return previous_row[-1]
+            
+        # Transcribe the saved audio file
+        transcriber = aai.Transcriber()
         try:
-            audio_data = AudioSegment.from_file(io.BytesIO(audio_file.read()))
-            audio_data = audio_data.set_channels(1).set_frame_rate(16000)  # Adjust channels and frame rate as needed
-            audio_data.export(audio_file, format='wav')
+            transcript = transcriber.transcribe(file_path)
+
+            # Remove special characters and spaces from the transcribed text
+            transcribed_text_cleaned = ''.join(re.split(r'[-., ]', transcript.text))
+            transcribed_text_cleaned = transcribed_text_cleaned.upper()  # Convert to uppercase
+
+            # Original given text
+            original_text = 'Thequickbrownfoxjumpsoverthelazydog'
+            original_text = original_text.upper()   # Convert to uppercase
+
+            
+            edit_distance = levenshtein_distance(transcribed_text_cleaned, original_text)
+
+            # Set a threshold for allowed edit distance
+            threshold = 5  # Adjust as needed
+
+            if edit_distance <= threshold:
+                return JsonResponse({'message': transcribed_text_cleaned})
+            else:
+                return JsonResponse({'error': transcribed_text_cleaned}, status=400)
         except Exception as e:
-            return JsonResponse({'message': f'Error converting audio: {str(e)}'}, status=400)
+            # Optionally, if there's an error, you can remove the audio file
+            # os.remove(file_path)
+            return JsonResponse({'error': str(e)}, status=500)
+    else:
+        return JsonResponse({'error': 'Invalid request'}, status=400)
 
-        # Initialize the recognizer and perform speech recognition
-        recognizer = sr.Recognizer()
+    
 
+@csrf_exempt
+def phase2(request):
+    if request.method == 'POST' and request.FILES['audio']:
+        audio_file = request.FILES['audio']
+
+        # Get the user's mobile number from the file name
+        file_name = audio_file.name
+        userMobile = file_name.split('_')[0]  # Assuming the mobile number is at the beginning of the file name
+
+        # Save the audio file in the media directory with the correct file name format
+        file_path = os.path.join(MEDIA_DIR, file_name)
+        with open(file_path, 'wb+') as destination:
+            for chunk in audio_file.chunks():
+                destination.write(chunk)
+
+        def levenshtein_distance(s, t):
+            """
+            Compute the Levenshtein distance between two strings.
+            """
+            if len(s) > len(t):
+                s, t = t, s
+
+            # Previous row of distances
+            previous_row = range(len(t) + 1)
+
+            for i, c1 in enumerate(s):
+                # Current row of distances
+                current_row = [i + 1]
+
+                for j, c2 in enumerate(t):
+                    insertions = previous_row[j + 1] + 1  # j+1 instead of j since previous_row and current_row are one character longer
+                    deletions = current_row[j] + 1        # than s and t
+                    substitutions = previous_row[j] + (c1 != c2)
+                    current_row.append(min(insertions, deletions, substitutions))
+
+                # Previous row of distances becomes current row
+                previous_row = current_row
+
+            return previous_row[-1]
+
+        # Transcribe the saved audio file
+        transcriber = aai.Transcriber()
         try:
-            with sr.AudioFile(audio_file) as source:
-                audio_data = recognizer.record(source)
+            transcript = transcriber.transcribe(file_path)
 
-                # Perform speech recognition
-                recognized_text = recognizer.recognize_google(audio_data)  # You can use different recognition engines
+            # Remove special characters and spaces from the transcribed text
+            transcribed_text_cleaned = ''.join(re.split(r'[-., ]', transcript.text))
 
-                # Logging for successful recognition
-                logging.debug('Speech recognition successful.')
+            # Original given text
+            original_text = 'THEQUICKBROWNFOXJUMPSOVERTHELAZYDOG'
+            # original_text = 'ABCDEFGHIJKLM'
+            # original_text = original_text.upper()   # Convert to uppercase
 
-                # Expected text for verification (A-Z alphabet)
-                expected_text = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            edit_distance = levenshtein_distance(transcribed_text_cleaned, original_text)
 
-                # Calculate similarity between recognized and expected text
-                similarity = calculate_similarity(recognized_text.upper(), expected_text)
+            # Set a threshold for allowed edit distance
+            threshold = 5  # Adjust as needed
 
-                if similarity >= 0.8:
-                    return JsonResponse({'message': 'Voice Successfully verified.'}, status=200)
-                else:
-                    return JsonResponse({'message': 'Voice verification failed.'}, status=400)
+            if edit_distance <= threshold:
+                return JsonResponse({'message': transcribed_text_cleaned})
+            else:
+                return JsonResponse({'error': transcribed_text_cleaned}, status=400)
+        except Exception as e:
+            # Optionally, if there's an error, you can remove the audio file
+            # os.remove(file_path)
+            return JsonResponse({'error': str(e)}, status=500)
+    else:
+        return JsonResponse({'error': 'Invalid request'}, status=400)
 
-        except sr.UnknownValueError:
-            # Logging for failure to understand audio
-            logging.error('Could not understand audio.')
 
-        except sr.RequestError as e:
-            # Logging for speech recognition error
-            logging.error(f'Speech recognition error: {e}')
+    
 
-    # If the request method is not POST or there's an issue, return an error response
-    return JsonResponse({'message': 'Invalid request method or error occurred.'}, status=500)
+
+@csrf_exempt
+def phase3(request):
+    if request.method == 'POST' and request.FILES['audio']:
+        audio_file = request.FILES['audio']
+        file_name = audio_file.name
+        userMobile = file_name.split('_')[0]
+        # Save the audio file in the media directory
+        file_path = os.path.join(MEDIA_DIR, file_name)
+        with open(file_path, 'wb+') as destination:
+            for chunk in audio_file.chunks():
+                destination.write(chunk)
+
+        def levenshtein_distance(s, t):
+                """
+                Compute the Levenshtein distance between two strings.
+                """
+                if len(s) > len(t):
+                    s, t = t, s
+
+                # Previous row of distances
+                previous_row = range(len(t) + 1)
+
+                for i, c1 in enumerate(s):
+                    # Current row of distances
+                    current_row = [i + 1]
+
+                    for j, c2 in enumerate(t):
+                        insertions = previous_row[j + 1] + 1  # j+1 instead of j since previous_row and current_row are one character longer
+                        deletions = current_row[j] + 1        # than s and t
+                        substitutions = previous_row[j] + (c1 != c2)
+                        current_row.append(min(insertions, deletions, substitutions))
+
+                    # Previous row of distances becomes current row
+                    previous_row = current_row
+
+                return previous_row[-1]
+            
+        # Transcribe the saved audio file
+        transcriber = aai.Transcriber()
+        try:
+            transcript = transcriber.transcribe(file_path)
+
+            # Remove special characters and spaces from the transcribed text
+            transcribed_text_cleaned = ''.join(re.split(r'[-., ]', transcript.text))
+            transcribed_text_cleaned = transcribed_text_cleaned.upper()  # Convert to uppercase
+
+            # Original given text
+            # original_text = 'THEQUICKBROWNFOXJUMPSOVERTHELAZYDOG'
+            original_text = 'ABCDEFGHIJKLM'
+            # original_text = original_text.upper()   # Convert to uppercase
+
+            
+            edit_distance = levenshtein_distance(transcribed_text_cleaned, original_text)
+
+            # Set a threshold for allowed edit distance
+            threshold = 5  # Adjust as needed
+
+            if edit_distance <= threshold:
+                return JsonResponse({'message': transcribed_text_cleaned})
+            else:
+                return JsonResponse({'error': transcribed_text_cleaned}, status=400)
+        except Exception as e:
+            # Optionally, if there's an error, you can remove the audio file
+            os.remove(file_path)
+            return JsonResponse({'error': str(e)}, status=500)
+    else:
+        return JsonResponse({'error': 'Invalid request'}, status=400)
+
+    
+
+@csrf_exempt
+def phase4(request):
+    if request.method == 'POST' and request.FILES['audio']:
+        audio_file = request.FILES['audio']
+        file_name = audio_file.name
+        userMobile = file_name.split('_')[0]
+        # Save the audio file in the media directory
+        file_path = os.path.join(MEDIA_DIR, file_name)
+        with open(file_path, 'wb+') as destination:
+            for chunk in audio_file.chunks():
+                destination.write(chunk)
+        def levenshtein_distance(s, t):
+                """
+                Compute the Levenshtein distance between two strings.
+                """
+                if len(s) > len(t):
+                    s, t = t, s
+
+                # Previous row of distances
+                previous_row = range(len(t) + 1)
+
+                for i, c1 in enumerate(s):
+                    # Current row of distances
+                    current_row = [i + 1]
+
+                    for j, c2 in enumerate(t):
+                        insertions = previous_row[j + 1] + 1  # j+1 instead of j since previous_row and current_row are one character longer
+                        deletions = current_row[j] + 1        # than s and t
+                        substitutions = previous_row[j] + (c1 != c2)
+                        current_row.append(min(insertions, deletions, substitutions))
+
+                    # Previous row of distances becomes current row
+                    previous_row = current_row
+
+                return previous_row[-1]
+            
+        # Transcribe the saved audio file
+        transcriber = aai.Transcriber()
+        try:
+            transcript = transcriber.transcribe(file_path)
+
+            # Remove special characters and spaces from the transcribed text
+            transcribed_text_cleaned = ''.join(re.split(r'[-., ]', transcript.text))
+            transcribed_text_cleaned = transcribed_text_cleaned.upper()  # Convert to uppercase
+
+            # Original given text
+            original_text = 'TheearlybirdgetsthewormAnappleadaykeepsthedoctoraway'
+            # original_text = original_text.upper()   # Convert to uppercase
+
+            
+            edit_distance = levenshtein_distance(transcribed_text_cleaned, original_text)
+
+            # Set a threshold for allowed edit distance
+            threshold = 5  # Adjust as needed
+
+            if edit_distance <= threshold:
+                return JsonResponse({'message': transcribed_text_cleaned})
+            else:
+                return JsonResponse({'error': transcribed_text_cleaned}, status=400)
+        except Exception as e:
+            # Optionally, if there's an error, you can remove the audio file
+            os.remove(file_path)
+            return JsonResponse({'error': str(e)}, status=500)
+    else:
+        return JsonResponse({'error': 'Invalid request'}, status=400)
+
+@csrf_exempt
+def phase5(request):
+    if request.method == 'POST' and request.FILES['audio']:
+        audio_file = request.FILES['audio']
+        file_name = audio_file.name
+        userMobile = file_name.split('_')[0]
+        # Save the audio file in the media directory
+        file_path = os.path.join(MEDIA_DIR, file_name)
+        with open(file_path, 'wb+') as destination:
+            for chunk in audio_file.chunks():
+                destination.write(chunk)
+
+        def levenshtein_distance(s, t):
+                """
+                Compute the Levenshtein distance between two strings.
+                """
+                if len(s) > len(t):
+                    s, t = t, s
+
+                # Previous row of distances
+                previous_row = range(len(t) + 1)
+
+                for i, c1 in enumerate(s):
+                    # Current row of distances
+                    current_row = [i + 1]
+
+                    for j, c2 in enumerate(t):
+                        insertions = previous_row[j + 1] + 1  # j+1 instead of j since previous_row and current_row are one character longer
+                        deletions = current_row[j] + 1        # than s and t
+                        substitutions = previous_row[j] + (c1 != c2)
+                        current_row.append(min(insertions, deletions, substitutions))
+
+                    # Previous row of distances becomes current row
+                    previous_row = current_row
+
+                return previous_row[-1]
+            
+        # Transcribe the saved audio file
+        transcriber = aai.Transcriber()
+        try:
+            transcript = transcriber.transcribe(file_path)
+
+            # Remove special characters and spaces from the transcribed text
+            transcribed_text_cleaned = ''.join(re.split(r'[-., ]', transcript.text))
+            transcribed_text_cleaned = transcribed_text_cleaned.upper()  # Convert to uppercase
+
+            # Original given text
+            original_text = 'Zeroonetwothreefourfivesixseveneightnineten'
+            # original_text = original_text.upper()   # Convert to uppercase
+
+            
+            edit_distance = levenshtein_distance(transcribed_text_cleaned, original_text)
+
+            # Set a threshold for allowed edit distance
+            threshold = 5  # Adjust as needed
+
+            if edit_distance <= threshold:
+                return JsonResponse({'message': transcribed_text_cleaned})
+            else:
+                return JsonResponse({'error': transcribed_text_cleaned}, status=400)
+        except Exception as e:
+            # Optionally, if there's an error, you can remove the audio file
+            # os.remove(file_path)
+            return JsonResponse({'error': str(e)}, status=500)
+    else:
+        return JsonResponse({'error': 'Invalid request'}, status=400)
+    
+from django.http import JsonResponse
+from django.views import View
+from .voice_recognition import train_voice_model, predict_user_voice
+
+class TrainVoiceModelView(View):
+    def get(self, request, *args, **kwargs):
+        try:
+            train_voice_model()
+            return JsonResponse({"status": "success", "message": "Model trained successfully!"})
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)})
+
+class PredictUserVoiceView(View):
+    def get(self, request, *args, **kwargs):
+        try:
+            result = predict_user_voice()
+            return JsonResponse({"status": "success", "predicted_user": result})
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)})
+
+def voice_recognition_page(request):
+    return render(request, 'voice_recognition.html')
+
+# click method
+@csrf_exempt
+def voice_login(request):
+    if request.method == 'POST':
+        r = sr.Recognizer()
+        with sr.Microphone() as source:
+            r.adjust_for_ambient_noise(source)
+            print("Please say something")
+            audio = r.listen(source)
+            print("Recognizing Now .... ")
+
+            try:
+                recognized_text = r.recognize_google(audio)
+                print("You have said: " + recognized_text)
+            except sr.UnknownValueError:
+                print("Google Speech Recognition could not understand audio")
+                recognized_text = None
+            except sr.RequestError as e:
+                print(f"Could not request results from Google Speech Recognition service; {e}")
+                recognized_text = None
+
+            # Save the recorded audio (adjust the path as needed)
+            save_path = os.path.join("media", "recorded.wav")
+            with open(save_path, "wb") as f:
+                f.write(audio.get_wav_data())
+
+            response_data = {
+                "success": True,
+                "recognized_text": recognized_text,
+                "message": "Voice recording saved successfully.",
+            }
+            return JsonResponse(response_data)
+
+    return render(request, 'voice_login.html')
+
+def voice_auth(request):
+    if request.method == 'POST' and request.FILES['audio']:
+        audio_file = request.FILES['audio']
+
+        # Get the user's mobile number from the file name
+        file_name = audio_file.name
+        userMobile = file_name.split('_')[0]  # Assuming the mobile number is at the beginning of the file name
+
+        # Save the audio file in the media directory with the correct file name format
+        file_path = os.path.join(MEDIA_DIR, file_name)
+        with open(file_path, 'wb+') as destination:
+            for chunk in audio_file.chunks():
+                destination.write(chunk)
+        
+    if request.method == 'GET':
+        render(request, 'voice_login.html')
+    else:
+        return JsonResponse({'error': 'Invalid request'}, status=400)
+
+# from django.http import JsonResponse
+# from django.views.decorators.csrf import csrf_exempt
+# import speech_recognition as sr  # Make sure to install the 'SpeechRecognition' library
+# from pydub import AudioSegment
+# import io
+# import logging
+# import difflib  # We'll use difflib to calculate similarity
+# logging.basicConfig(filename='voice_verification.log', level=logging.DEBUG)
+# def calculate_similarity(s1, s2):
+#     if len(s1) < len(s2):
+#         return calculate_similarity(s2, s1)
+
+#     distances = range(len(s1) + 1)
+#     for index2, char2 in enumerate(s2):
+#         new_distances = [index2 + 1]
+#         for index1, char1 in enumerate(s1):
+#             if char1 == char2:
+#                 new_distances.append(distances[index1])
+#             else:
+#                 new_distances.append(1 + min((distances[index1], distances[index1 + 1], new_distances[-1])))
+#         distances = new_distances
+
+#     return 1 - (distances[-1] / max(len(s1), len(s2)))
+# @csrf_exempt
+# def voice_with_assemblyai(request):
+#     logging.debug('Received POST request to /verify_voice/')
+
+#     if request.method == 'POST':
+#         audio_file = request.FILES.get('audio')
+
+#         # Check if the uploaded file is in a supported format
+#         if not audio_file.name.lower().endswith(('.wav', '.aiff', '.aif', '.flac')):
+#             return JsonResponse({'message': 'Unsupported audio format.'}, status=400)
+
+#         # Convert the audio to PCM WAV format
+#         try:
+#             audio_data = AudioSegment.from_file(io.BytesIO(audio_file.read()))
+#             audio_data = audio_data.set_channels(1).set_frame_rate(16000)  # Adjust channels and frame rate as needed
+#             converted_audio_file = io.BytesIO()
+#             audio_data.export(converted_audio_file, format='wav')
+#             converted_audio_file.seek(0)
+#         except Exception as e:
+#             return JsonResponse({'message': f'Error converting audio: {str(e)}'}, status=400)
+
+#         # Initialize the recognizer and perform speech recognition
+#         recognizer = sr.Recognizer()
+
+#         try:
+#             with sr.AudioFile(converted_audio_file) as source:
+#                 audio_data = recognizer.record(source)
+
+#                 # Perform speech recognition
+#                 recognized_text = recognizer.recognize_google(audio_data)  # You can use different recognition engines
+
+#                 # Logging for successful recognition
+#                 logging.debug('Speech recognition successful.')
+
+#                 # Expected text for verification (A-Z alphabet)
+#                 expected_text = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+#                 # Calculate similarity between recognized and expected text
+#                 similarity = calculate_similarity(recognized_text.upper(), expected_text)
+
+#                 if similarity >= 0.8:
+#                     return JsonResponse({'message': 'Voice Successfully verified.'}, status=200)
+#                 else:
+#                     return JsonResponse({'message': 'Voice verification failed.'}, status=400)
+
+#         except sr.UnknownValueError:
+#             # Logging for failure to understand audio
+#             logging.error('Could not understand audio.')
+
+#         except sr.RequestError as e:
+#             # Logging for speech recognition error
+#             logging.error(f'Speech recognition error: {str(e)}')
+
+#     # If the request method is not POST or there's an issue, return an error response
+#     return JsonResponse({'message': 'Invalid request method or error occurred.'}, status=500)
+
+
 ''''
 class VisitorListCreateView(generics.ListCreateAPIView):
     queryset = Visitor.objects.all()

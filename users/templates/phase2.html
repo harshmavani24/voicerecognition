@@ -1,0 +1,1488 @@
+{% comment %} <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Registration</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="voice.css">
+    <style>body {
+        font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        text-align: center;
+        background-color: hsl(0, 0%, 94%);
+      }
+      
+      .container {
+        width: 400px;
+        height: auto;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #fff;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        border-radius: 20px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+      button {
+        display: inline-block;
+        padding: 10px 20px;
+        margin: 12px;
+        background-color: #007bff;
+        width: 150px;
+        font-size: 15px;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      
+      button:hover {
+        background-color: #0056b3;
+      }
+      button:active {
+        transform: scale(0.95);
+      }
+      img {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        margin: 20px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        filter: grayscale(50%);
+      }
+      .image {
+        position: relative;
+        top: -20px;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+    #userDetails{
+        margin-top: -100px;
+    
+    }
+    #userDetails p{
+        font-size: 30px;
+        font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        color: rgb(48, 57, 124);
+        padding: 10px;
+        margin: auto;
+    }
+    #phone{
+        font-size: 25px !important;
+    }
+    #msg1{
+        display: flex;
+        font-size: 15px !important;
+        color: grey !important;
+    }
+    #msg2{
+        display: none;
+        font-size: 15px !important;
+        color: grey !important;
+    }
+    
+    .center {
+        height: auto;
+        justify-content: center;
+        align-items: center;
+        background: transparent;
+        display: none;
+      }
+      .wave {
+        width: 5px;
+        height: 30px;
+        background: linear-gradient(45deg, rgb(39, 132, 252), #103673);
+        margin: 10px;
+        animation: wave 1s linear infinite;
+        border-radius: 20px;
+      }
+      .wave:nth-child(2) {
+        animation-delay: 0.1s;
+      }
+      .wave:nth-child(3) {
+        animation-delay: 0.2s;
+      }
+      .wave:nth-child(4) {
+        animation-delay: 0.3s;
+      }
+      .wave:nth-child(5) {
+        animation-delay: 0.4s;
+      }
+      .wave:nth-child(6) {
+        animation-delay: 0.5s;
+      }
+      .wave:nth-child(7) {
+        animation-delay: 0.6s;
+      }
+      .wave:nth-child(8) {
+        animation-delay: 0.7s;
+      }
+      .wave:nth-child(9) {
+        animation-delay: 0.8s;
+      }
+      .wave:nth-child(10) {
+        animation-delay: 0.9s;
+      }
+      
+      @keyframes wave {
+        0% {
+          transform: scale(0);
+        }
+        50% {
+          transform: scale(1);
+        }
+        100% {
+          transform: scale(0);
+        }
+      }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="image">
+            <img
+              src="https://img.freepik.com/free-vector/businessman-character-avatar-isolated_24877-60111.jpg?size=626&ext=jpg"
+              alt="Profile Picture"
+            />
+          </div>
+        <div id="userDetails">
+            <p id="uname">Demo Name</p>
+            <p id="phone">9998887776</p>
+            <p id="msg1">You are now ready to record your voice. Click the button below to start.</p>
+            <p id="msg2">Recording...</p>
+            <div class="center" id="centerDiv">
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+            </div>
+        </div>
+        <button id="startRecording">Register Voice</button>
+        <button id="verificationArea" style="display: none;">Verify</button>
+        <div id="verificationResult"></div>
+    </div>
+    <script>
+        // CSRF setup for Django AJAX requests
+        function getCookie(name) {
+            let value = "; " + document.cookie;
+            let parts = value.split("; " + name + "=");
+            if (parts.length == 2) return parts.pop().split(";").shift();
+        }
+
+        $.ajaxSetup({
+            headers: { "X-CSRFToken": getCookie("csrftoken") }
+        });
+
+        $(document).ready(function () {
+            $.ajax({
+                url: "/api/user",
+                method: "GET",
+                xhrFields: {
+                    withCredentials: true
+                },
+                success: function (data) {
+                    // Assuming the API response contains user details: id, name, phone
+                    $("#uname").text(data.name);
+                    $("#phone").text(data.phonenumber);
+
+                    // Capture the user's mobile number
+                    const userMobile = data.phonenumber.replace(/\D/g, ''); // Remove non-numeric characters
+                    console.log(userMobile);
+                    const startRecordingButton = document.getElementById('startRecording');
+                    const verificationArea = document.getElementById('verificationArea');
+                    const verificationResult = document.getElementById('verificationResult');
+                    const verifyButton = document.getElementById('verificationArea');
+                    let audioChunks = [];
+                    let mediaRecorder;
+
+                    startRecordingButton.addEventListener('click', async () => {
+                        try {
+                            startRecordingButton.style.display = 'none';
+                            document.getElementById('msg1').style.display = 'none';
+                            document.getElementById('msg2').style.display = 'block';
+                            document.getElementById('centerDiv').style.display = 'flex';
+                            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                            mediaRecorder = new MediaRecorder(stream);
+                            audioChunks = [];
+
+                            mediaRecorder.ondataavailable = event => {
+                                if (event.data.size > 0) {
+                                    audioChunks.push(event.data);
+                                }
+                            };
+
+                            mediaRecorder.onstop = () => {
+                                verificationArea.style.display = 'inline-block';
+                                document.getElementById('msg2').style.display = 'none';
+                                document.getElementById('centerDiv').style.display = 'none';
+                            };
+
+                            mediaRecorder.start();
+                            setTimeout(() => {
+                                mediaRecorder.stop();
+                            }, 8000); // Stop recording after 10 seconds
+                        } catch (error) {
+                            console.error('Error accessing microphone:', error);
+                        }
+                    });
+
+                    verifyButton.addEventListener('click', async () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                        const formData = new FormData();
+
+    // Append the user's mobile number as part of the file name.
+                        //const userMobile = data.phonenumber.replace(/\D/g, ''); // Remove non-numeric characters
+                        const fileName = userMobile+`_phase2.wav`; // Correct file name format
+                        console.log(fileName);
+                        formData.append('audio', audioBlob, fileName);
+
+    // Send the audio data to the server for voice verification via a POST request
+                        fetch('/phase2/', {
+                            method: 'POST',
+                            body: formData
+                        })
+                        // save th file in the server with specific directory caled voice_sample
+            
+                        .then(response => {
+                            if (response.ok) {
+                                // Voice verification successful
+                                return response.json(); // Return JSON response
+                            }
+                            else if (response.status == 400) {
+                                // Voice verification failed
+                                return response.json(); 
+                            } else {
+                                // Handle the server's response here if there's an error
+                                return Promise.reject('Error verifying voice.');
+                            }
+                        })
+                        .then(result => {
+                            // Display the transcription result
+                            if (result.error) {
+                              // Display the custom error message (transcribed_text_cleaned) for 404
+                              verificationResult.textContent = "Custom 404 error: " + result.error;
+                            } 
+                            else {
+            // Display the transcription result
+                                verificationResult.textContent = "Transcription completed successfully.";
+                                window.location.href = "/phase/3/";
+                            }
+                        })
+                        .catch(error => {
+                            // if error code is 404 then i want to print please register your voice again
+                            verificationResult.textContent = "Error verifying voice: Please try again; your voice does not match the given text.";
+                            // hide the verify button
+                            verifyButton.style.display = 'none';
+                            // show the register button
+                            startRecordingButton.style.display = 'inline-block';
+                            // show the message
+                            document.getElementById('msg1').style.display = 'block';
+                            document.getElementById('msg2').style.display = 'none';
+                        });
+                        
+                    });
+                },
+                error: function (xhr, status, error) {
+                    console.log("Error:", error);
+                }
+            });
+        });
+    </script>
+</body>
+</html> {% endcomment %}
+
+{% comment %} <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Registration</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="phase2.css">
+    <style>body {
+        font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        text-align: center;
+        background-color: hsl(0, 0%, 94%);
+      }
+      
+      .container {
+        width: 400px;
+        height: auto;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #fff;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        border-radius: 20px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+      button {
+        display: inline-block;
+        padding: 10px 20px;
+        margin: 12px;
+        background-color: #007bff;
+        width: 150px;
+        font-size: 15px;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      
+      button:hover {
+        background-color: #0056b3;
+      }
+      button:active {
+        transform: scale(0.95);
+      }
+      img {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        margin: 20px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        filter: grayscale(50%);
+      }
+      .image {
+        position: relative;
+        top: -20px;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+    #userDetails{
+        margin-top: -100px;
+    
+    }
+    #userDetails p{
+        font-size: 30px;
+        font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        color: rgb(48, 57, 124);
+        padding: 10px;
+        margin: auto;
+    }
+    #phone{
+        font-size: 25px !important;
+    }
+    #msg1{
+        display: flex;
+        font-size: 15px !important;
+        color: grey !important;
+    }
+    #msg2{
+        display: none;
+        font-size: 15px !important;
+        color: grey !important;
+    }
+    #speech{
+        font-size: 20px !important;
+        color: grey !important;
+    }
+    
+    .center {
+        height: auto;
+        justify-content: center;
+        align-items: center;
+        background: transparent;
+        display: none;
+      }
+      .wave {
+        width: 5px;
+        height: 30px;
+        background: linear-gradient(45deg, rgb(39, 132, 252), #103673);
+        margin: 10px;
+        animation: wave 1s linear infinite;
+        border-radius: 20px;
+      }
+      .wave:nth-child(2) {
+        animation-delay: 0.1s;
+      }
+      .wave:nth-child(3) {
+        animation-delay: 0.2s;
+      }
+      .wave:nth-child(4) {
+        animation-delay: 0.3s;
+      }
+      .wave:nth-child(5) {
+        animation-delay: 0.4s;
+      }
+      .wave:nth-child(6) {
+        animation-delay: 0.5s;
+      }
+      .wave:nth-child(7) {
+        animation-delay: 0.6s;
+      }
+      .wave:nth-child(8) {
+        animation-delay: 0.7s;
+      }
+      .wave:nth-child(9) {
+        animation-delay: 0.8s;
+      }
+      .wave:nth-child(10) {
+        animation-delay: 0.9s;
+      }
+      
+      @keyframes wave {
+        0% {
+          transform: scale(0);
+        }
+        50% {
+          transform: scale(1);
+        }
+        100% {
+          transform: scale(0);
+        }
+      }
+      .loader-container {
+    width: 100%;
+    height: 30px;
+    background-color: #eee;
+    border-radius: 5px;
+    overflow: hidden;
+    position: relative; /* Added to position the percentage text */
+}
+
+.loader-bar {
+    width: 0;
+    height: 100%;
+    background-color: #3498db;
+    transition: width 1s linear;
+    position: absolute; /* Added to position the bar inside the container */
+}
+
+.percentage {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+    color: #333;
+    z-index: 1; /* Ensure the percentage text is above the loading bar */
+}
+.timer {
+    text-align: center;
+    font-size: 30px;
+    color: #333;
+
+}
+
+#countdown {
+    font-weight: bold;
+    color: #3498db;
+}
+
+.unit {
+    font-size: 15px;
+    color: #666;
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="image">
+            <img
+              src="https://img.freepik.com/free-vector/businessman-character-avatar-isolated_24877-60111.jpg?size=626&ext=jpg"
+              alt="Profile Picture"
+            />
+          </div>
+        <div id="userDetails">
+            <p id="uname">Demo Name</p>
+            <p id="phone">9998887776</p>
+            <p id="speech">THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG</p>
+            <p id="msg1">You are now ready to record your voice. Click the button below to start.</p>
+            <p id="msg2">Recording...</p>
+            <div class="center" id="centerDiv">
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+            </div>
+            <div class="timer" style="display: none;">
+                <div id="countdown">10</div>
+                <div class="unit">Seconds</div>
+            </div>
+        </div>
+        <button id="startRecording">Register Voice</button>
+        <button id="verificationArea" style="display: none;">Verify</button>
+        <div class="loader-container" style="display: none;">
+            <div class="loader-bar"></div>
+            <div class="percentage">0%</div>
+        </div>
+        <div id="verificationResult"></div>
+    </div>
+    <script>
+        // CSRF setup for Django AJAX requests
+        function getCookie(name) {
+            let value = "; " + document.cookie;
+            let parts = value.split("; " + name + "=");
+            if (parts.length == 2) return parts.pop().split(";").shift();
+        }
+
+        $.ajaxSetup({
+            headers: { "X-CSRFToken": getCookie("csrftoken") }
+        });
+
+        $(document).ready(function () {
+            $.ajax({
+                url: "/api/user",
+                method: "GET",
+                xhrFields: {
+                    withCredentials: true
+                },
+                success: function (data) {
+                    // Assuming the API response contains user details: id, name, phone
+                    $("#uname").text(data.name);
+                    $("#phone").text(data.phonenumber);
+
+                    // Capture the user's mobile number
+                    const userMobile = data.phonenumber.replace(/\D/g, ''); // Remove non-numeric characters
+                    console.log(userMobile);
+                    const startRecordingButton = document.getElementById('startRecording');
+                    const verificationArea = document.getElementById('verificationArea');
+                    const verificationResult = document.getElementById('verificationResult');
+                    const verifyButton = document.getElementById('verificationArea');
+                    let audioChunks = [];
+                    let mediaRecorder;
+
+                    startRecordingButton.addEventListener('click', async () => {
+                        try {
+                            startRecordingButton.style.display = 'none';
+                            document.getElementById('msg1').style.display = 'none';
+                            document.getElementById('msg2').style.display = 'block';
+                            document.getElementById('centerDiv').style.display = 'flex';
+                            document.querySelector('.timer').style.display = 'block';
+                            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                            mediaRecorder = new MediaRecorder(stream);
+                            audioChunks = [];
+
+                            mediaRecorder.ondataavailable = event => {
+                                if (event.data.size > 0) {
+                                    audioChunks.push(event.data);
+                                }
+                            };
+
+                            mediaRecorder.onstop = () => {
+                                verificationArea.style.display = 'inline-block';
+                                document.getElementById('msg2').style.display = 'none';
+                                document.getElementById('centerDiv').style.display = 'none';
+                            };
+
+                            mediaRecorder.start();
+                            setTimeout(() => {
+                                mediaRecorder.stop();
+                            }, 10000); // Stop recording after 10 seconds
+                        } catch (error) {
+                            console.error('Error accessing microphone:', error);
+                        }
+                    });
+
+                    verifyButton.addEventListener('click', async () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                        const formData = new FormData();
+
+    // Append the user's mobile number as part of the file name.
+                        //const userMobile = data.phonenumber.replace(/\D/g, ''); // Remove non-numeric characters
+                        const fileName = userMobile+`_phase2.wav`; // Correct file name format
+                        console.log(fileName);
+                        formData.append('audio', audioBlob, fileName);
+                        document.getElementById('verificationArea').style.display = 'none';
+                        document.querySelector('.loader-container').style.display = 'block';
+                        document.querySelector('.timer').style.display = 'none';
+
+    // Send the audio data to the server for voice verification via a POST request
+                        fetch('/phase2/', {
+                            method: 'POST',
+                            body: formData
+                        })
+                        // save th file in the server with specific directory caled voice_sample
+            
+                        .then(response => {
+                            if (response.ok) {
+                                // Voice verification successful
+                                return response.json(); // Return JSON response
+                            }
+                            else if (response.status == 400) {
+                                // Voice verification failed
+                                return response.json(); 
+                            } else {
+                                // Handle the server's response here if there's an error
+                                return Promise.reject('Error verifying voice.');
+                            }
+                        })
+                        .then(result => {
+                            // Display the transcription result
+                            if (result.error) {
+                              // Display the custom error message (transcribed_text_cleaned) for 404
+                              verificationResult.textContent = "Custom 404 error: " + result.error;
+                              verificationResult.style.color = "red";
+                            } 
+                            else {
+            // Display the transcription result
+                                verificationResult.textContent = "Transcription completed successfully.";
+                                verificationResult.style.color = "green";
+                                verificationArea.style.display = 'none';
+                                window.location.href = "/phase/3/";
+                            }
+                        })
+                        .catch(error => {
+                            // if error code is 404 then i want to print please register your voice again
+                            verificationResult.textContent = "Error verifying voice: Please try again; your voice does not match the given text.";
+                            verificationResult.style.color = "red";
+                            // hide the verify button
+                            verifyButton.style.display = 'none';
+                            // show the register button
+                            startRecordingButton.style.display = 'inline-block';
+                            // show the message
+                            document.getElementById('msg1').style.display = 'block';
+                            document.getElementById('msg2').style.display = 'none';
+                        });
+                    });
+                },
+                error: function (xhr, status, error) {
+                    console.log("Error:", error);
+                }
+            });
+        });
+        document.addEventListener("DOMContentLoaded", function () {
+        const countdown = document.getElementById("countdown");
+        const timerDuration = 10; // 15 seconds
+
+        let secondsRemaining = timerDuration;
+
+        const updateTimer = () => {
+            countdown.textContent = secondsRemaining;
+             secondsRemaining--;
+
+        if (secondsRemaining < 0) {
+            clearInterval(timerInterval);
+        }
+        };
+
+    updateTimer(); // Initial display
+
+    const timerInterval = setInterval(updateTimer, 1000); // Update every second
+});
+
+    </script>
+</body>
+</html> {% endcomment %}
+{% comment %} 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Registration</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="phase2.css">
+    <style>body {
+        font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        text-align: center;
+        background-color: hsl(0, 0%, 94%);
+      }
+      
+      .container {
+        width: 400px;
+        height: auto;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #fff;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        border-radius: 20px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+      button {
+        display: inline-block;
+        padding: 10px 20px;
+        margin: 12px;
+        background-color: #007bff;
+        width: 150px;
+        font-size: 15px;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      
+      button:hover {
+        background-color: #0056b3;
+      }
+      button:active {
+        transform: scale(0.95);
+      }
+      img {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        margin: 20px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        filter: grayscale(50%);
+      }
+      .image {
+        position: relative;
+        top: -20px;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+    #userDetails{
+        margin-top: -100px;
+    
+    }
+    #userDetails p{
+        font-size: 30px;
+        font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        color: rgb(48, 57, 124);
+        padding: 10px;
+        margin: auto;
+    }
+    #phone{
+        font-size: 25px !important;
+    }
+    #msg1{
+        display: flex;
+        font-size: 15px !important;
+        color: grey !important;
+    }
+    #msg2{
+        display: none;
+        font-size: 15px !important;
+        color: grey !important;
+    }
+    #speech{
+        font-size: 20px !important;
+        color: grey !important;
+    }
+    
+    .center {
+        height: auto;
+        justify-content: center;
+        align-items: center;
+        background: transparent;
+        display: none;
+      }
+      .wave {
+        width: 5px;
+        height: 30px;
+        background: linear-gradient(45deg, rgb(39, 132, 252), #103673);
+        margin: 10px;
+        animation: wave 1s linear infinite;
+        border-radius: 20px;
+      }
+      .wave:nth-child(2) {
+    animation-delay: 0.1s;
+  }
+  .wave:nth-child(3) {
+    animation-delay: 0.2s;
+  }
+  .wave:nth-child(4) {
+    animation-delay: 0.3s;
+  }
+  .wave:nth-child(5) {
+    animation-delay: 0.4s;
+  }
+  .wave:nth-child(6) {
+    animation-delay: 0.5s;
+  }
+  .wave:nth-child(7) {
+    animation-delay: 0.6s;
+  }
+  .wave:nth-child(8) {
+    animation-delay: 0.7s;
+  }
+  .wave:nth-child(9) {
+    animation-delay: 0.8s;
+  }
+  .wave:nth-child(10) {
+    animation-delay: 0.9s;
+  }
+      @keyframes wave {
+        0% {
+          transform: scale(0);
+        }
+        50% {
+          transform: scale(1);
+        }
+        100% {
+          transform: scale(0);
+        }
+      }
+      .loader-container {
+    width: 100%;
+    height: 30px;
+    background-color: #eee;
+    border-radius: 5px;
+    overflow: hidden;
+    position: relative; /* Added to position the percentage text */
+}
+
+.loader-bar {
+    width: 0;
+    display: block;
+    height: 100%;
+    background-color: #3498db;
+    transition: width 1s linear;
+    position: absolute; /* Added to position the bar inside the container */
+}
+
+.percentage {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+    color: #333;
+    z-index: 1; /* Ensure the percentage text is above the loading bar */
+}
+.timer {
+    text-align: center;
+    font-size: 30px;
+    color: #333;
+
+}
+
+#countdown {
+    font-weight: bold;
+    color: #3498db;
+}
+
+.unit {
+    font-size: 15px;
+    color: #666;
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="image">
+            <img
+              src="https://img.freepik.com/free-vector/businessman-character-avatar-isolated_24877-60111.jpg?size=626&ext=jpg"
+              alt="Profile Picture"
+            />
+          </div>
+        <div id="userDetails">
+            <p id="uname">Demo Name</p>
+            <p id="phone">9998887776</p>
+            <p id="speech">The Qick Brown Fox Our The Lazy Dogs</p>
+            <p id="msg1">You are now ready to record your voice. Click the button below to start.</p>
+            <p id="msg2">Recording...</p>
+            <div class="center" id="centerDiv">
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+            </div>
+            <div class="timer" style="display: none;">
+                <div id="countdown">15</div>
+                <div class="unit">Seconds</div>
+            </div>
+        </div>
+        <button id="startRecording">Register Voice</button>
+        <button id="verificationArea" style="display: none;">Verify</button>
+        <div class="loader-container" style="display: none;">
+            <div class="loader-bar"></div>
+            <div class="percentage">0%</div>
+        </div>
+        <div id="verificationResult"></div>
+    </div>
+    <script>
+        // CSRF setup for Django AJAX requests
+        function getCookie(name) {
+            let value = "; " + document.cookie;
+            let parts = value.split("; " + name + "=");
+            if (parts.length == 2) return parts.pop().split(";").shift();
+        }
+
+        $.ajaxSetup({
+            headers: { "X-CSRFToken": getCookie("csrftoken") }
+        });
+
+        $(document).ready(function () {
+            $.ajax({
+                url: "/api/user",
+                method: "GET",
+                xhrFields: {
+                    withCredentials: true
+                },
+                success: function (data) {
+                    // Assuming the API response contains user details: id, name, phone
+                    $("#uname").text(data.name);
+                    $("#phone").text(data.phonenumber);
+
+                    // Capture the user's mobile number
+                    const userMobile = data.phonenumber.replace(/\D/g, ''); // Remove non-numeric characters
+                    console.log(userMobile);
+                    const startRecordingButton = document.getElementById('startRecording');
+                    const verificationArea = document.getElementById('verificationArea');
+                    const verificationResult = document.getElementById('verificationResult');
+                    const verifyButton = document.getElementById('verificationArea');
+                    let audioChunks = [];
+                    let mediaRecorder;
+
+                    startRecordingButton.addEventListener('click', async () => {
+                        try {
+                            startRecordingButton.style.display = 'none';
+                            document.getElementById('msg1').style.display = 'none';
+                            document.getElementById('msg2').style.display = 'block';
+                            document.getElementById('centerDiv').style.display = 'flex';
+                            document.querySelector('.timer').style.display = 'block';
+                            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                            mediaRecorder = new MediaRecorder(stream);
+                            audioChunks = [];
+
+                            mediaRecorder.ondataavailable = event => {
+                                if (event.data.size > 0) {
+                                    audioChunks.push(event.data);
+                                }
+                            };
+
+                            mediaRecorder.onstop = () => {
+                                verificationArea.style.display = 'inline-block';
+                                document.getElementById('msg2').style.display = 'none';
+                                document.getElementById('centerDiv').style.display = 'none';
+                            };
+
+                            mediaRecorder.start();
+                            setTimeout(() => {
+                                mediaRecorder.stop();
+                            }, 8000); // Stop recording after 10 seconds
+                        } catch (error) {
+                            console.error('Error accessing microphone:', error);
+                        }
+                    });
+
+                    verifyButton.addEventListener('click', async () => {
+                        document.querySelector('.loader-container').style.display = 'block';
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                        const formData = new FormData();
+
+    // Append the user's mobile number as part of the file name.
+                        //const userMobile = data.phonenumber.replace(/\D/g, ''); // Remove non-numeric characters
+                        const fileName = userMobile+`_phase2.wav`; // Correct file name format
+                        console.log(fileName);
+                        formData.append('audio', audioBlob, fileName);
+                        document.getElementById('verificationArea').style.display = 'none';
+                        
+                        document.querySelector('.timer').style.display = 'none';
+
+    // Send the audio data to the server for voice verification via a POST request
+                        fetch('/phase2/', {
+                            method: 'POST',
+                            body: formData
+                        })
+                        // save th file in the server with specific directory caled voice_sample
+            
+                        .then(response => {
+                            if (response.ok) {
+                                document.querySelector('.loader-container').style.display = 'none';
+                                // Voice verification successful
+                                return response.json(); // Return JSON response
+                            }
+                            else if (response.status == 400) {
+                                document.querySelector('.loader-container').style.display = 'none';
+                                // Voice verification failed
+                                return response.json(); 
+                            } else {
+                                // Handle the server's response here if there's an error
+                                return Promise.reject('Error verifying voice.');
+                            }
+                        })
+                        .then(result => {
+                            // Display the transcription result
+                            if (result.error) {
+                              // Display the custom error message (transcribed_text_cleaned) for 404
+                              verificationResult.textContent = "Custom 404 error: " + result.error;
+                              verificationResult.style.color = "red";
+                            } 
+                            else {
+            // Display the transcription result
+                                verificationResult.textContent = "Transcription completed successfully.";
+                                verificationResult.style.color = "green";
+                                verificationArea.style.display = 'none';
+                                window.location.href = "/phase/3/";
+                            }
+                        })
+                        .catch(error => {
+                            // if error code is 404 then i want to print please register your voice again
+                            verificationResult.textContent = "Error verifying voice: Please try again; your voice does not match the given text.";
+                            verificationResult.style.color = "red";
+                            // hide the verify button
+                            verifyButton.style.display = 'none';
+                            // show the register button
+                            startRecordingButton.style.display = 'inline-block';
+                            // show the message
+                            document.getElementById('msg1').style.display = 'block';
+                            document.getElementById('msg2').style.display = 'none';
+                        });
+                    });
+                },
+                error: function (xhr, status, error) {
+                    console.log("Error:", error);
+                }
+            });
+        });
+        document.addEventListener("DOMContentLoaded", function () {
+        const countdown = document.getElementById("countdown");
+        const timerDuration = 10; // 15 seconds
+
+        let secondsRemaining = timerDuration;
+
+        const updateTimer = () => {
+            countdown.textContent = secondsRemaining;
+             secondsRemaining--;
+
+        if (secondsRemaining < 0) {
+            clearInterval(timerInterval);
+        }
+        };
+
+    updateTimer(); // Initial display
+
+    const timerInterval = setInterval(updateTimer, 1000); // Update every second
+});
+
+    </script>
+</body>
+</html> {% endcomment %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Registration</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="phase2.css">
+    <style>body {
+        font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        text-align: center;
+        background-color: hsl(0, 0%, 94%);
+      }
+      
+      .container {
+        width: 400px;
+        height: auto;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #fff;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        border-radius: 20px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+      button {
+        display: inline-block;
+        padding: 10px 20px;
+        margin: 12px;
+        background-color: #007bff;
+        width: 150px;
+        font-size: 15px;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      
+      button:hover {
+        background-color: #0056b3;
+      }
+      button:active {
+        transform: scale(0.95);
+      }
+      img {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        margin: 20px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        filter: grayscale(50%);
+      }
+      .image {
+        position: relative;
+        top: -20px;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+    #userDetails{
+        margin-top: -100px;
+    
+    }
+    #userDetails p{
+        font-size: 30px;
+        font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        color: rgb(48, 57, 124);
+        padding: 10px;
+        margin: auto;
+    }
+    #phone{
+        font-size: 25px !important;
+    }
+    #msg1{
+        display: flex;
+        font-size: 15px !important;
+        color: grey !important;
+    }
+    #msg2{
+        display: none;
+        font-size: 15px !important;
+        color: grey !important;
+    }
+    #speech{
+        font-size: 20px !important;
+        color: grey !important;
+    }
+    
+    .center {
+        height: auto;
+        justify-content: center;
+        align-items: center;
+        background: transparent;
+        display: none;
+      }
+      .wave {
+        width: 5px;
+        height: 30px;
+        background: linear-gradient(45deg, rgb(39, 132, 252), #103673);
+        margin: 10px;
+        animation: wave 1s linear infinite;
+        border-radius: 20px;
+      }
+      .wave:nth-child(2) {
+        animation-delay: 0.1s;
+      }
+      .wave:nth-child(3) {
+        animation-delay: 0.2s;
+      }
+      .wave:nth-child(4) {
+        animation-delay: 0.3s;
+      }
+      .wave:nth-child(5) {
+        animation-delay: 0.4s;
+      }
+      .wave:nth-child(6) {
+        animation-delay: 0.5s;
+      }
+      .wave:nth-child(7) {
+        animation-delay: 0.6s;
+      }
+      .wave:nth-child(8) {
+        animation-delay: 0.7s;
+      }
+      .wave:nth-child(9) {
+        animation-delay: 0.8s;
+      }
+      .wave:nth-child(10) {
+        animation-delay: 0.9s;
+      }
+      
+      @keyframes wave {
+        0% {
+          transform: scale(0);
+        }
+        50% {
+          transform: scale(1);
+        }
+        100% {
+          transform: scale(0);
+        }
+      }
+      .loader-container {
+            width: 100%;
+            height: 30px;
+            background-color: #eee;
+            border-radius: 5px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .loader-bar {
+            width: 0;
+            height: 100%;
+            background-color: #3498db;
+            transition: width 1s linear;
+        }
+
+        .percentage {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 18px;
+            color: #333;
+            z-index: 1;
+        }
+.timer {
+    text-align: center;
+    font-size: 30px;
+    color: #333;
+
+}
+
+#countdown {
+    font-weight: bold;
+    color: #3498db;
+}
+
+.unit {
+    font-size: 15px;
+    color: #666;
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="image">
+            <img
+              src="https://img.freepik.com/free-vector/businessman-character-avatar-isolated_24877-60111.jpg?size=626&ext=jpg"
+              alt="Profile Picture"
+            />
+          </div>
+        <div id="userDetails">
+            <p id="uname">Demo Name</p>
+            <p id="phone">9998887776</p>
+            <p id="speech">Speech Text Enter your own</p>
+            <p id="msg1">You are now ready to record your voice. Click the button below to start.</p>
+            <p id="msg2">Recording...</p>
+            <div class="center" id="centerDiv">
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+            </div>
+            <div class="timer" style="display: none;">
+                <div id="countdown">10</div>
+                <div class="unit">Seconds</div>
+            </div>
+        </div>
+        <button id="startRecording">Register Voice</button>
+        <button id="verificationArea" style="display: none;">Verify</button>
+        <div class="loader-container" style="display: none;">
+            <div class="loader-bar"></div>
+            <div class="percentage">0%</div>
+        </div>
+        <div id="verificationResult"></div>
+    </div>
+    <script>
+        // CSRF setup for Django AJAX requests
+        function getCookie(name) {
+            let value = "; " + document.cookie;
+            let parts = value.split("; " + name + "=");
+            if (parts.length == 2) return parts.pop().split(";").shift();
+        }
+
+        $.ajaxSetup({
+            headers: { "X-CSRFToken": getCookie("csrftoken") }
+        });
+
+        $(document).ready(function () {
+            $.ajax({
+                url: "/api/user",
+                method: "GET",
+                xhrFields: {
+                    withCredentials: true
+                },
+                success: function (data) {
+                    // Assuming the API response contains user details: id, name, phone
+                    $("#uname").text(data.name);
+                    $("#phone").text(data.phonenumber);
+
+                    // Capture the user's mobile number
+                    const userMobile = data.phonenumber.replace(/\D/g, ''); // Remove non-numeric characters
+                    console.log(userMobile);
+                    const startRecordingButton = document.getElementById('startRecording');
+                    const verificationArea = document.getElementById('verificationArea');
+                    const verificationResult = document.getElementById('verificationResult');
+                    const verifyButton = document.getElementById('verificationArea');
+                    let audioChunks = [];
+                    let mediaRecorder;
+
+                    startRecordingButton.addEventListener('click', async () => {
+                        try {
+                            startRecordingButton.style.display = 'none';
+                            document.getElementById('msg1').style.display = 'none';
+                            document.getElementById('msg2').style.display = 'block';
+                            document.getElementById('centerDiv').style.display = 'flex';
+                            document.querySelector('.timer').style.display = 'block';
+                            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                            mediaRecorder = new MediaRecorder(stream);
+                            audioChunks = [];
+
+                            mediaRecorder.ondataavailable = event => {
+                                if (event.data.size > 0) {
+                                    audioChunks.push(event.data);
+                                }
+                            };
+
+                            mediaRecorder.onstop = () => {
+                                verificationArea.style.display = 'inline-block';
+                                document.getElementById('msg2').style.display = 'none';
+                                document.getElementById('centerDiv').style.display = 'none';
+                            };
+
+                            mediaRecorder.start();
+                            setTimeout(() => {
+                                mediaRecorder.stop();
+                            }, 8000); // Stop recording after 10 seconds
+                        } catch (error) {
+                            console.error('Error accessing microphone:', error);
+                        }
+                    });
+
+                    verifyButton.addEventListener('click', async () => {
+                        document.querySelector('.loader-container').style.display = 'block';
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                        const formData = new FormData();
+
+    // Append the user's mobile number as part of the file name.
+                        //const userMobile = data.phonenumber.replace(/\D/g, ''); // Remove non-numeric characters
+                        const fileName = userMobile+`_phase2.wav`; // Correct file name format
+                        console.log(fileName);
+                        formData.append('audio', audioBlob, fileName);
+                        document.getElementById('verificationArea').style.display = 'none';
+                        
+                        document.querySelector('.timer').style.display = 'none';
+
+    // Send the audio data to the server for voice verification via a POST request
+                        fetch('/phase2/', {
+                            method: 'POST',
+                            body: formData
+                        })
+                        // save th file in the server with specific directory caled voice_sample
+            
+                        .then(response => {
+                            if (response.ok) {
+                                document.querySelector('.loader-container').style.display = 'none';
+                                // Voice verification successful
+                                return response.json(); // Return JSON response
+                            }
+                            else if (response.status == 400) {
+                                document.querySelector('.loader-container').style.display = 'none';
+                                // Voice verification failed
+                                return response.json(); 
+                            } else {
+                                // Handle the server's response here if there's an error
+                                return Promise.reject('Error verifying voice.');
+                            }
+                        })
+                        .then(result => {
+                            // Display the transcription result
+                            if (result.error) {
+                              // Display the custom error message (transcribed_text_cleaned) for 404
+                              verificationResult.textContent = "Custom 404 error: " + result.error;
+                              verificationResult.style.color = "red";
+                            } 
+                            else {
+            // Display the transcription result
+                                verificationResult.textContent = "Transcription completed successfully.";
+                                verificationResult.style.color = "green";
+                                verificationArea.style.display = 'none';
+                                window.location.href = "/phase/3/";
+                            }
+                        })
+                        .catch(error => {
+                            // if error code is 404 then i want to print please register your voice again
+                            verificationResult.textContent = "Error verifying voice: Please try again; your voice does not match the given text.";
+                            verificationResult.style.color = "red";
+                            // hide the verify button
+                            verifyButton.style.display = 'none';
+                            // show the register button
+                            startRecordingButton.style.display = 'inline-block';
+                            // show the message
+                            document.getElementById('msg1').style.display = 'block';
+                            document.getElementById('msg2').style.display = 'none';
+                        });
+                    });
+                },
+                error: function (xhr, status, error) {
+                    console.log("Error:", error);
+                }
+            });
+        });
+        document.addEventListener("DOMContentLoaded", function () {
+        const countdown = document.getElementById("countdown");
+        const timerDuration = 10; // Set the timer duration to 15 seconds
+        const animationDuration = 10; // Set the animation duration to 10 seconds
+
+        let secondsRemaining = timerDuration;
+
+        const updateTimer = () => {
+            countdown.textContent = secondsRemaining;
+            secondsRemaining--;
+
+            if (secondsRemaining < 0) {
+                clearInterval(timerInterval);
+                // After the timer ends, show the "Verify" button
+                document.getElementById("verificationArea").style.display = "inline-block";
+                // Hide the wave animation
+                document.getElementById("centerDiv").style.display = "none";
+            }
+        };
+
+        updateTimer(); // Initial display
+
+        const timerInterval = setInterval(updateTimer, 1000); // Update every second
+
+        const verifyButton = document.getElementById("verificationArea");
+        const loaderBar = document.querySelector(".loader-bar");
+        const percentage = document.querySelector(".percentage");
+
+        verifyButton.addEventListener("click", async () => {
+            // Hide the "Verify" button
+            verifyButton.style.display = "none";
+            // Show the loader bar
+            document.querySelector(".loader-container").style.display = "block";
+
+            let animationStartTime = null;
+
+            function animateLoader(timestamp) {
+                if (!animationStartTime) {
+                    animationStartTime = timestamp;
+                }
+
+                const progress = (timestamp - animationStartTime) / (animationDuration * 1000);
+
+                if (progress <= 1) {
+                    loaderBar.style.width = `${progress * 100}%`;
+                    percentage.textContent = `${Math.round(progress * 100)}%`;
+                    requestAnimationFrame(animateLoader);
+                }
+            }
+
+            requestAnimationFrame(animateLoader);
+        });
+    });
+
+    </script>
+</body>
+</html>
