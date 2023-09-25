@@ -636,7 +636,7 @@ import assemblyai as aai
 import os
 import re
 # Set the API key for AssemblyAI
-aai.settings.api_key = "1d45957af17045c397a7c22a7d880ce1"
+aai.settings.api_key = "1d45957af17045c397d880ce1"
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MEDIA_DIR = os.path.join(BASE_DIR, 'voicesamples')
